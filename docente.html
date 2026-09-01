@@ -36,8 +36,9 @@
       <div class="dashboard-heading">
         <div><span class="eyebrow">Diagnóstico 2026</span><h1>Radar del aula</h1><p>Lectura pedagógica de resultados, fortalezas y oportunidades de refuerzo.</p></div>
         <div class="download-actions">
-          <button class="ghost-button" id="csvButton" type="button">↓ Descargar CSV</button>
-          <button class="primary-button" id="pdfButton" type="button">🖨 Guardar PDF</button>
+          <button class="ghost-button" id="csvButton" type="button">↓ Resultados CSV</button>
+          <button class="ghost-button" id="rubricCsvButton" type="button">↓ Rúbrica CSV</button>
+          <button class="primary-button" id="pdfButton" type="button">🖨 Informe PDF</button>
         </div>
       </div>
 
@@ -64,6 +65,38 @@
           <div class="panel-heading"><div><span class="eyebrow">Habilidades</span><h2>Logro por eje</h2></div><small>porcentaje</small></div>
           <div class="skill-chart" id="skillChart"></div>
         </article>
+      </section>
+
+      <section class="panel rubric-panel" id="diagnosticRubric">
+        <div class="panel-heading"><div><span class="eyebrow">Criterios transparentes</span><h2>Rúbrica de evaluación diagnóstica</h2></div><span class="rubric-total">10 evidencias · 10 puntos</span></div>
+        <div class="rubric-note"><strong>Propósito:</strong> identificar conocimientos previos para planificar el acompañamiento. El resultado no se utiliza como calificación sumativa.</div>
+
+        <div class="evidence-grid">
+          <article><span>🧠</span><div><strong>5 preguntas conceptuales</strong><small>1 punto diagnóstico por cada respuesta correcta.</small></div><b>5 pts</b></article>
+          <article><span>🎮</span><div><strong>5 retos de aplicación</strong><small>1 punto por cada reto resuelto correctamente.</small></div><b>5 pts</b></article>
+        </div>
+
+        <div class="rubric-alert"><span>ⓘ</span><p>Las monedas, puntos de juego, rapidez, rachas, llaves, cupón de dulce y Bono +1 son motivadores. <strong>No modifican el resultado diagnóstico de 0 a 10.</strong> En los retos de varias decisiones, la evidencia se considera lograda cuando la secuencia completa es correcta.</p></div>
+
+        <div class="rubric-table-wrap">
+          <table class="rubric-table">
+            <thead><tr><th>Resultado</th><th>Nivel diagnóstico</th><th>Evidencia observada</th><th>Decisión pedagógica sugerida</th></tr></thead>
+            <tbody>
+              <tr><td><strong>9–10</strong><small>90–100%</small></td><td><span class="rubric-level is-high">Dominio destacado</span></td><td>Reconoce conceptos y los aplica con seguridad en situaciones nuevas.</td><td>Proponer retos de profundización, liderazgo y creación.</td></tr>
+              <tr><td><strong>7–8</strong><small>70–80%</small></td><td><span class="rubric-level is-expected">Logro esperado</span></td><td>Comprende las bases y aplica la mayoría de los aprendizajes.</td><td>Consolidar conceptos puntuales mediante práctica y validación.</td></tr>
+              <tr><td><strong>4–6</strong><small>40–60%</small></td><td><span class="rubric-level is-developing">En desarrollo</span></td><td>Reconoce algunos conceptos, pero necesita apoyo para aplicarlos.</td><td>Trabajar con ejemplos, modelado, equipos y prototipos guiados.</td></tr>
+              <tr><td><strong>0–3</strong><small>0–30%</small></td><td><span class="rubric-level is-starting">Bases por construir</span></td><td>Presenta conocimientos iniciales o respuestas todavía intuitivas.</td><td>Iniciar con experiencias concretas, vocabulario esencial y acompañamiento.</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h3 class="course-rubric-title">Focos diagnósticos por nivel</h3>
+        <div class="course-rubric-grid">
+          <article><span>4.º · DISCOVER</span><p>Necesidades y problemas · Producto y servicio · Cliente y valor · Dinero, ahorro y actitud emprendedora.</p></article>
+          <article><span>5.º · CREATE</span><p>Design Thinking · Empatía y prototipo · Feedback y marca · Producción, calidad, costos y utilidad.</p></article>
+          <article><span>6.º · BUILD</span><p>Mercado y propuesta de valor · Canvas · Finanzas · Validación, métricas, tecnología y blockchain.</p></article>
+          <article><span>7.º · SCALE</span><p>Innovación y MVP · Métricas y escalabilidad · IA ética, Web3, blockchain, pitch e inversión.</p></article>
+        </div>
       </section>
 
       <section class="panel results-panel">
