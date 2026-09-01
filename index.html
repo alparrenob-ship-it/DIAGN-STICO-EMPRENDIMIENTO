@@ -18,7 +18,10 @@
         <span class="brand-mark" aria-hidden="true">M</span>
         <span><strong>Misión Emprende</strong><small>Diagnóstico 4.º–7.º EGB</small></span>
       </a>
-      <button class="sound-button" id="soundButton" type="button" aria-label="Desactivar sonidos" title="Activar o desactivar sonidos">🔊</button>
+      <div class="topbar-actions">
+        <a class="teacher-link" href="docente.html" aria-label="Acceso exclusivo para docentes">🔒 Docente</a>
+        <button class="sound-button" id="soundButton" type="button" aria-label="Desactivar sonidos" title="Activar o desactivar sonidos">🔊</button>
+      </div>
     </header>
 
     <main id="app" tabindex="-1">
@@ -44,8 +47,8 @@
             <div><p>Nueva misión</p><h2>Identifica a tu explorador</h2></div>
           </div>
 
-          <label for="studentName">Nombre y apellido</label>
-          <input id="studentName" name="studentName" type="text" maxlength="60" autocomplete="name" placeholder="Escribe tu nombre" required>
+          <label for="studentName">Nombre o código estudiantil</label>
+          <input id="studentName" name="studentName" type="text" maxlength="60" autocomplete="off" placeholder="Escribe tu nombre o código" required>
 
           <label for="studentClass">Curso</label>
           <div class="grade-grid" id="gradeGrid" role="radiogroup" aria-label="Selecciona tu curso">
@@ -62,7 +65,7 @@
           </select>
 
           <button class="primary-button" type="submit">Comenzar misión <span aria-hidden="true">→</span></button>
-          <p class="privacy-note">Tus respuestas permanecen en este dispositivo.</p>
+          <p class="privacy-note">Al finalizar, tu resultado se enviará de forma segura al panel docente.</p>
         </form>
       </section>
 
@@ -125,6 +128,7 @@
               <button class="primary-button" id="printButton" type="button">Guardar resultado</button>
               <button class="secondary-button" id="restartButton" type="button">Nueva misión</button>
             </div>
+            <p class="sync-status" id="syncStatus" role="status">Preparando el envío del resultado…</p>
           </article>
         </div>
 
@@ -152,6 +156,6 @@
 
     <footer><span>Diseñado para aprender jugando</span><span>Profe Anita · Emprendimiento 2026</span></footer>
   </div>
-  <script src="app.js"></script>
+  <script type="module" src="app.js"></script>
 </body>
 </html>
