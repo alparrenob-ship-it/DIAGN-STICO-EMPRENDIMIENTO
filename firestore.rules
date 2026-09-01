@@ -1,0 +1,52 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function isTeacher() {
+      return signedIn()
+        && request.auth.token.email_verified == true
+        && request.auth.token.email == "REEMPLAZAR_CORREO_DOCENTE";
+    }
+
+    function validStudentResult() {
+      return request.resource.data.keys().hasAll([
+          "student", "grade", "parallel", "levelCode", "correct", "total",
+          "points", "keys", "maxStreak", "performance", "skills", "badges",
+          "ownerUid", "bonusUnlocked", "reflection", "createdAt", "updatedAt", "schemaVersion"
+        ])
+        && request.resource.data.keys().hasOnly([
+          "student", "grade", "parallel", "levelCode", "correct", "total",
+          "points", "keys", "maxStreak", "performance", "skills", "badges",
+          "ownerUid", "bonusUnlocked", "reflection", "createdAt", "updatedAt", "schemaVersion"
+        ])
+        && request.resource.data.student is string
+        && request.resource.data.student.size() >= 1
+        && request.resource.data.student.size() <= 60
+        && request.resource.data.grade in [4, 5, 6, 7]
+        && request.resource.data.parallel in ["A", "B", "C", "D"]
+        && request.resource.data.correct is int
+        && request.resource.data.correct >= 0
+        && request.resource.data.correct <= 10
+        && request.resource.data.total == 10
+        && request.resource.data.ownerUid == request.auth.uid
+        && request.resource.data.bonusUnlocked == false
+        && request.resource.data.reflection == ""
+        && request.resource.data.schemaVersion == 1;
+    }
+
+    match /diagnosticResults/{resultId} {
+      allow create: if signedIn() && validStudentResult();
+      allow read, delete: if isTeacher();
+      allow update: if signedIn()
+        && resource.data.ownerUid == request.auth.uid
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(["reflection", "bonusUnlocked", "updatedAt"])
+        && request.resource.data.reflection is string
+        && request.resource.data.reflection.size() >= 20
+        && request.resource.data.reflection.size() <= 240
+        && request.resource.data.bonusUnlocked == true;
+    }
+  }
+}
