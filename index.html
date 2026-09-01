@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Juego de evaluación diagnóstica de Emprendimiento para 4.º a 7.º EGB.">
+  <meta name="theme-color" content="#111b3f">
+  <title>Misión Emprende | Diagnóstico gamificado</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="app-shell">
+    <header class="topbar">
+      <a class="brand" href="#" aria-label="Volver al inicio" data-action="home">
+        <span class="brand-mark" aria-hidden="true">M</span>
+        <span><strong>Misión Emprende</strong><small>Diagnóstico 4.º–7.º EGB</small></span>
+      </a>
+      <button class="sound-button" id="soundButton" type="button" aria-label="Desactivar sonidos" title="Activar o desactivar sonidos">🔊</button>
+    </header>
+
+    <main id="app" tabindex="-1">
+      <section class="screen start-screen" id="startScreen">
+        <div class="mission-copy">
+          <span class="eyebrow">Evaluación diagnóstica gamificada</span>
+          <h1>Tu aventura emprendedora empieza aquí</h1>
+          <p>Supera 10 misiones, toma decisiones y descubre tus fortalezas. No necesitas estudiar: responde con lo que ya sabes.</p>
+
+          <div class="route-preview" aria-label="Ruta de aprendizaje">
+            <div><span>1</span><strong>DISCOVER</strong><small>4.º · Descubrir</small></div>
+            <div><span>2</span><strong>CREATE</strong><small>5.º · Crear</small></div>
+            <div><span>3</span><strong>BUILD</strong><small>6.º · Construir</small></div>
+            <div><span>4</span><strong>SCALE</strong><small>7.º · Escalar</small></div>
+          </div>
+        </div>
+
+        <form class="player-card" id="playerForm">
+          <div class="card-heading">
+            <span class="avatar" aria-hidden="true">🚀</span>
+            <div><p>Nueva misión</p><h2>Identifica a tu explorador</h2></div>
+          </div>
+
+          <label for="studentName">Nombre y apellido</label>
+          <input id="studentName" name="studentName" type="text" maxlength="60" autocomplete="name" placeholder="Escribe tu nombre" required>
+
+          <label for="studentClass">Curso</label>
+          <div class="grade-grid" id="gradeGrid" role="radiogroup" aria-label="Selecciona tu curso">
+            <label class="grade-option"><input type="radio" name="grade" value="4" required><span><b>4.º</b><small>DISCOVER</small></span></label>
+            <label class="grade-option"><input type="radio" name="grade" value="5"><span><b>5.º</b><small>CREATE</small></span></label>
+            <label class="grade-option"><input type="radio" name="grade" value="6"><span><b>6.º</b><small>BUILD</small></span></label>
+            <label class="grade-option"><input type="radio" name="grade" value="7"><span><b>7.º</b><small>SCALE</small></span></label>
+          </div>
+
+          <label for="parallel">Paralelo</label>
+          <select id="parallel" name="parallel" required>
+            <option value="">Selecciona</option>
+            <option value="A">A</option><option value="B">B</option><option value="C">C</option><option value="D">D</option>
+          </select>
+
+          <button class="primary-button" type="submit">Comenzar misión <span aria-hidden="true">→</span></button>
+          <p class="privacy-note">Tus respuestas permanecen en este dispositivo.</p>
+        </form>
+      </section>
+
+      <section class="screen game-screen is-hidden" id="gameScreen" aria-live="polite">
+        <div class="game-hud">
+          <div class="player-chip"><span id="hudAvatar">🚀</span><div><small id="hudGrade">Nivel</small><strong id="hudName">Explorador</strong></div></div>
+          <div class="hud-stat"><small>Puntos</small><strong id="scoreValue">0</strong></div>
+          <div class="hud-stat"><small>Energía</small><strong id="livesValue" aria-label="3 puntos de energía">● ● ●</strong></div>
+          <div class="hud-stat"><small>Racha</small><strong id="streakValue">🔥 0</strong></div>
+        </div>
+
+        <div class="progress-block">
+          <div><span id="missionLabel">Misión 1 de 10</span><span id="progressPercent">10%</span></div>
+          <div class="progress-track" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="10"><span id="progressBar"></span></div>
+        </div>
+
+        <article class="question-card">
+          <div class="question-meta"><span id="categoryBadge">Creatividad</span><span id="difficultyBadge">Nivel inicial</span></div>
+          <h2 id="questionText">Pregunta</h2>
+          <p class="question-hint" id="questionHint">Elige la opción que consideres correcta.</p>
+          <div class="answers-grid" id="answersGrid"></div>
+
+          <div class="feedback is-hidden" id="feedbackBox" role="status">
+            <span class="feedback-icon" id="feedbackIcon">✓</span>
+            <div><strong id="feedbackTitle">¡Excelente!</strong><p id="feedbackText">Explicación</p></div>
+          </div>
+
+          <button class="primary-button next-button is-hidden" id="nextButton" type="button">Siguiente misión <span aria-hidden="true">→</span></button>
+        </article>
+      </section>
+
+      <section class="screen result-screen is-hidden" id="resultScreen">
+        <div class="result-hero">
+          <span class="result-trophy" id="resultTrophy" aria-hidden="true">🏆</span>
+          <span class="eyebrow">Misión completada</span>
+          <h1 id="resultTitle">¡Gran trabajo!</h1>
+          <p id="resultSummary">Terminaste las 10 misiones.</p>
+          <div class="score-ring" id="scoreRing"><div><strong id="finalCorrect">0</strong><span>/ 10</span><small>respuestas correctas</small></div></div>
+        </div>
+
+        <div class="report-grid">
+          <article class="report-card">
+            <div class="section-heading"><div><span class="eyebrow">Mapa de habilidades</span><h2>Tu diagnóstico</h2></div><span class="level-pill" id="resultLevel">En desarrollo</span></div>
+            <div class="skills-list" id="skillsList"></div>
+          </article>
+
+          <article class="report-card recommendation-card">
+            <span class="recommendation-icon" aria-hidden="true">🧭</span>
+            <h2>Próxima misión</h2>
+            <p id="recommendationText"></p>
+            <div class="result-details">
+              <div><small>Explorador</small><strong id="resultName"></strong></div>
+              <div><small>Curso</small><strong id="resultCourse"></strong></div>
+              <div><small>Puntaje</small><strong id="finalPoints"></strong></div>
+            </div>
+            <div class="result-actions">
+              <button class="primary-button" id="printButton" type="button">Guardar resultado</button>
+              <button class="secondary-button" id="restartButton" type="button">Nueva misión</button>
+            </div>
+          </article>
+        </div>
+      </section>
+    </main>
+
+    <footer><span>Diseñado para aprender jugando</span><span>Profe Anita · Emprendimiento 2026</span></footer>
+  </div>
+  <script src="app.js"></script>
+</body>
+</html>
