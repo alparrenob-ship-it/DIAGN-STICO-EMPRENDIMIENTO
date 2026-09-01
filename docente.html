@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Panel docente de resultados de Misión Emprende.">
+  <meta name="theme-color" content="#111b3f">
+  <title>Panel docente | Misión Emprende</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="dashboard.css">
+</head>
+<body>
+  <header class="dash-topbar">
+    <a class="brand" href="index.html"><span class="brand-mark">M</span><span><strong>Misión Emprende</strong><small>Panel de resultados</small></span></a>
+    <div class="session-actions">
+      <span id="teacherIdentity"></span>
+      <button class="ghost-button is-hidden" id="logoutButton" type="button">Cerrar sesión</button>
+    </div>
+  </header>
+
+  <main>
+    <section class="login-view" id="loginView">
+      <article class="login-card">
+        <span class="login-icon">🔐</span>
+        <span class="eyebrow">Acceso exclusivo</span>
+        <h1>Panel docente</h1>
+        <p>Consulta el avance de 4.º a 7.º, identifica habilidades por reforzar y descarga los resultados del diagnóstico.</p>
+        <button class="primary-button" id="loginButton" type="button">Entrar con Google</button>
+        <p class="login-message" id="loginMessage" role="status">Solo la cuenta docente autorizada puede consultar los datos.</p>
+      </article>
+    </section>
+
+    <section class="dashboard-view is-hidden" id="dashboardView">
+      <div class="dashboard-heading">
+        <div><span class="eyebrow">Diagnóstico 2026</span><h1>Radar del aula</h1><p>Lectura pedagógica de resultados, fortalezas y oportunidades de refuerzo.</p></div>
+        <div class="download-actions">
+          <button class="ghost-button" id="csvButton" type="button">↓ Descargar CSV</button>
+          <button class="primary-button" id="pdfButton" type="button">🖨 Guardar PDF</button>
+        </div>
+      </div>
+
+      <section class="filters" aria-label="Filtros del dashboard">
+        <label>Curso<select id="gradeFilter"><option value="all">Todos</option><option value="4">4.º</option><option value="5">5.º</option><option value="6">6.º</option><option value="7">7.º</option></select></label>
+        <label>Paralelo<select id="parallelFilter"><option value="all">Todos</option><option>A</option><option>B</option><option>C</option><option>D</option></select></label>
+        <label>Desempeño<select id="performanceFilter"><option value="all">Todos</option><option>Dominio destacado</option><option>Logro esperado</option><option>En desarrollo</option><option>Bases por construir</option></select></label>
+        <button class="ghost-button" id="clearFilters" type="button">Limpiar filtros</button>
+      </section>
+
+      <section class="metric-grid" aria-label="Resumen de resultados">
+        <article><span>Participantes</span><strong id="totalStudents">0</strong><small>diagnósticos completados</small></article>
+        <article><span>Promedio</span><strong id="averageScore">0/10</strong><small>respuestas correctas</small></article>
+        <article><span>Bonos +1</span><strong id="bonusRate">0%</strong><small>reflexiones completadas</small></article>
+        <article><span>Por reforzar</span><strong id="reinforcementSkill">—</strong><small>habilidad con menor logro</small></article>
+      </section>
+
+      <section class="insight-grid">
+        <article class="panel">
+          <div class="panel-heading"><div><span class="eyebrow">Comparación</span><h2>Promedio por curso</h2></div><small>sobre 10</small></div>
+          <div class="bar-chart" id="gradeChart"></div>
+        </article>
+        <article class="panel">
+          <div class="panel-heading"><div><span class="eyebrow">Habilidades</span><h2>Logro por eje</h2></div><small>porcentaje</small></div>
+          <div class="skill-chart" id="skillChart"></div>
+        </article>
+      </section>
+
+      <section class="panel results-panel">
+        <div class="panel-heading"><div><span class="eyebrow">Evidencias</span><h2>Resultados individuales</h2></div><small id="visibleCount">0 registros</small></div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Estudiante / código</th><th>Nivel</th><th>Resultado</th><th>Desempeño</th><th>Puntos</th><th>Bono</th><th>Fecha</th></tr></thead>
+            <tbody id="resultsBody"></tbody>
+          </table>
+          <p class="empty-state" id="emptyState">Todavía no hay resultados para estos filtros.</p>
+        </div>
+      </section>
+    </section>
+  </main>
+  <script type="module" src="dashboard.js"></script>
+</body>
+</html>
