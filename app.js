@@ -7,6 +7,9 @@ const LEVELS = {
   7: { code: "SCALE", label: "Escalar", avatar: "🚀", difficulty: "Startup Mindset", color: "#ff6689", reward: "Golden Ticket Series A +1", badge: ["🚀", "Fundador de startup", "Valida, escala y usa tecnología con propósito"] }
 };
 
+const SWEET_MISSIONS = { 4: 6, 5: 8, 6: 8, 7: 8 };
+const BOSS_AVATARS = { 4: "👾", 5: "🤖", 6: "🐉", 7: "🦠" };
+
 const q = (category, title, options, correct, feedback) => ({ type: "question", category, title, options, correct, feedback });
 const collect = (category, title, instruction, items, correct, feedback) => ({ type: "collect", category, title, instruction, items, correct, feedback });
 const sequence = (category, title, instruction, items, correct, feedback) => ({ type: "sequence", category, title, instruction, items, correct, feedback });
@@ -80,7 +83,7 @@ const MISSION_BANK = {
   ]
 };
 
-const state = { student: "", grade: 4, parallel: "", index: 0, points: 0, keys: 0, streak: 0, maxStreak: 0, correct: 0, mistakes: 0, answers: [], sound: true, locked: false, challenge: null, bonusUnlocked: false, resultId: null };
+const state = { student: "", grade: 4, parallel: "", index: 0, points: 0, keys: 0, streak: 0, maxStreak: 0, correct: 0, mistakes: 0, answers: [], sound: true, locked: false, challenge: null, bonusUnlocked: false, sweetUnlocked: false, resultId: null };
 const $ = selector => document.querySelector(selector);
 const screens = { start: $("#startScreen"), game: $("#gameScreen"), result: $("#resultScreen") };
 
@@ -106,10 +109,25 @@ function playTone(type) {
   } catch (_) { /* El juego continúa si el navegador bloquea el audio. */ }
 }
 
+function playBeat(step) {
+  if (!state.sound) return;
+  try {
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+    const ctx = new AudioContext();
+    const oscillator = ctx.createOscillator();
+    const gain = ctx.createGain();
+    oscillator.connect(gain); gain.connect(ctx.destination);
+    oscillator.frequency.value = 360 + (step * 85);
+    gain.gain.setValueAtTime(.06, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(.001, ctx.currentTime + .16);
+    oscillator.start(); oscillator.stop(ctx.currentTime + .16);
+  } catch (_) { /* El reto también funciona sin audio. */ }
+}
+
 function beginGame(event) {
   event.preventDefault();
   const data = new FormData(event.currentTarget);
-  Object.assign(state, { student: data.get("studentName").trim(), grade: Number(data.get("grade")), parallel: data.get("parallel"), index: 0, points: 0, keys: 0, streak: 0, maxStreak: 0, correct: 0, mistakes: 0, answers: [], locked: false, challenge: null, bonusUnlocked: false, resultId: null });
+  Object.assign(state, { student: data.get("studentName").trim(), grade: Number(data.get("grade")), parallel: data.get("parallel"), index: 0, points: 0, keys: 0, streak: 0, maxStreak: 0, correct: 0, mistakes: 0, answers: [], locked: false, challenge: null, bonusUnlocked: false, sweetUnlocked: false, resultId: null });
   const level = LEVELS[state.grade];
   $("#hudAvatar").textContent = level.avatar;
   $("#hudName").textContent = state.student;
@@ -143,7 +161,9 @@ function renderMission() {
   $("#progressBar").style.width = `${progress}%`;
   $(".progress-track").setAttribute("aria-valuenow", String(progress));
   $("#categoryBadge").textContent = mission.type === "question" ? mission.category : `♦ RETO · ${mission.category}`;
-  $("#difficultyBadge").textContent = level.difficulty;
+  const isPrizeMission = mission.type === "question" && state.index === SWEET_MISSIONS[state.grade];
+  $("#difficultyBadge").textContent = isPrizeMission ? "🍬 Pregunta Premio" : level.difficulty;
+  $("#prizeBanner").classList.toggle("is-hidden", !isPrizeMission);
   $("#questionText").textContent = mission.title;
   $("#questionHint").textContent = mission.type === "question" ? "Elige la opción que consideres correcta." : mission.instruction;
   updateHud(); renderTrail();
@@ -185,34 +205,61 @@ function completeQuestion(selectedIndex) {
 }
 
 function renderCollect(mission) {
-  const confirm = $("#challengeButton");
-  mission.items.forEach((item, index) => {
-    const button = makeAnswerButton(item, index, () => {
-      if (state.locked) return;
-      const position = state.challenge.selected.indexOf(index);
-      if (position >= 0) state.challenge.selected.splice(position, 1); else state.challenge.selected.push(index);
-      button.classList.toggle("is-selected");
-      confirm.disabled = state.challenge.selected.length === 0;
-    });
-    $("#answersGrid").appendChild(button);
-  });
-  confirm.textContent = "Comprobar selección"; confirm.disabled = true; confirm.classList.remove("is-hidden");
-  confirm.onclick = () => {
-    const selected = [...state.challenge.selected].sort((a, b) => a - b);
-    const correct = [...mission.correct].sort((a, b) => a - b);
-    completeMission(JSON.stringify(selected) === JSON.stringify(correct));
+  state.challenge.runnerIndex = 0;
+  const game = document.createElement("div");
+  game.className = "runner-game";
+  game.innerHTML = `<div class="game-title"><span>🐦 KINTI RUN</span><strong id="runnerCounter">1/${mission.items.length}</strong></div><div class="runner-stage"><div class="runner-sky">✦　·　☁️</div><div class="kinti-runner" aria-label="Kinti">🐦</div><div class="runner-item" id="runnerItem"></div><div class="runner-ground"></div></div><p class="runner-instruction">¿Kinti debe recogerlo porque ayuda a cumplir la misión?</p><div class="runner-controls"><button type="button" class="collect-action">✨ Recoger</button><button type="button" class="avoid-action">↗ Saltar</button></div>`;
+  $("#answersGrid").appendChild(game);
+
+  const showItem = () => {
+    $("#runnerCounter").textContent = `${state.challenge.runnerIndex + 1}/${mission.items.length}`;
+    const item = $("#runnerItem");
+    item.textContent = mission.items[state.challenge.runnerIndex];
+    item.classList.remove("runner-pop");
+    void item.offsetWidth;
+    item.classList.add("runner-pop");
   };
+
+  const decide = shouldCollect => {
+    if (state.locked || state.challenge.transitioning) return;
+    state.challenge.transitioning = true;
+    game.querySelectorAll("button").forEach(button => { button.disabled = true; });
+    if (shouldCollect) state.challenge.selected.push(state.challenge.runnerIndex);
+    $(".kinti-runner").classList.add(shouldCollect ? "is-collecting" : "is-jumping");
+    setTimeout(() => {
+      state.challenge.runnerIndex += 1;
+      if (state.challenge.runnerIndex >= mission.items.length) {
+        const selected = [...state.challenge.selected].sort((a, b) => a - b);
+        const correct = [...mission.correct].sort((a, b) => a - b);
+        completeMission(JSON.stringify(selected) === JSON.stringify(correct));
+        return;
+      }
+      $(".kinti-runner").classList.remove("is-collecting", "is-jumping");
+      state.challenge.transitioning = false;
+      game.querySelectorAll("button").forEach(button => { button.disabled = false; });
+      showItem();
+    }, 330);
+  };
+  game.querySelector(".collect-action").addEventListener("click", () => decide(true));
+  game.querySelector(".avoid-action").addEventListener("click", () => decide(false));
+  showItem();
 }
 
 function renderSequence(mission) {
+  const rhythm = document.createElement("div");
+  rhythm.className = "rhythm-header";
+  rhythm.innerHTML = `<span>🎵 RITMO EMPRENDEDOR</span><div>${mission.correct.map((_, index) => `<i data-beat="${index}"></i>`).join("")}</div><small>Construye la secuencia y activa toda la melodía.</small>`;
+  $("#answersGrid").appendChild(rhythm);
   const board = document.createElement("div");
-  board.className = "sequence-board";
+  board.className = "sequence-board rhythm-board";
   $("#answersGrid").appendChild(board);
   const confirm = $("#challengeButton");
   mission.items.forEach((item, index) => {
     const button = makeAnswerButton(item, index, () => {
       if (state.locked || state.challenge.sequence.includes(item)) return;
-      state.challenge.sequence.push(item); button.disabled = true; button.classList.add("is-selected");
+      state.challenge.sequence.push(item); button.disabled = true; button.classList.add("is-selected", "rhythm-hit");
+      playBeat(state.challenge.sequence.length);
+      rhythm.querySelector(`[data-beat="${state.challenge.sequence.length - 1}"]`).classList.add("is-lit");
       const chip = document.createElement("span");
       chip.className = "sequence-chip"; chip.textContent = `${state.challenge.sequence.length}. ${item}`; board.appendChild(chip);
       confirm.disabled = state.challenge.sequence.length !== mission.correct.length;
@@ -223,45 +270,64 @@ function renderSequence(mission) {
   reset.className = "secondary-mini"; reset.type = "button"; reset.textContent = "↺ Reiniciar orden";
   reset.addEventListener("click", () => {
     state.challenge.sequence = []; board.innerHTML = "";
+    rhythm.querySelectorAll("i").forEach(beat => beat.classList.remove("is-lit"));
     document.querySelectorAll(".answer-button").forEach(button => { button.disabled = false; button.classList.remove("is-selected"); });
     confirm.disabled = true;
   });
   $("#answersGrid").appendChild(reset);
-  confirm.textContent = "Comprobar orden"; confirm.disabled = true; confirm.classList.remove("is-hidden");
+  confirm.textContent = "🎤 Activar la canción"; confirm.disabled = true; confirm.classList.remove("is-hidden");
   confirm.onclick = () => completeMission(JSON.stringify(state.challenge.sequence) === JSON.stringify(mission.correct));
 }
 
 function renderSort(mission) {
-  mission.items.forEach((item, index) => {
-    const row = document.createElement("div"); row.className = "sort-card";
-    const label = document.createElement("strong"); label.textContent = item.text;
-    const actions = document.createElement("div"); actions.className = "sort-actions";
-    mission.groups.forEach((group, groupIndex) => {
-      const button = document.createElement("button"); button.type = "button"; button.textContent = group;
-      button.addEventListener("click", () => {
-        if (state.locked) return;
-        state.challenge.assignments[index] = groupIndex;
-        [...actions.children].forEach(child => child.classList.remove("is-selected")); button.classList.add("is-selected");
-        $("#challengeButton").disabled = Object.keys(state.challenge.assignments).length !== mission.items.length;
-      });
-      actions.appendChild(button);
+  state.challenge.sortIndex = 0;
+  const game = document.createElement("div");
+  game.className = "catch-game";
+  game.innerHTML = `<div class="game-title"><span>🪙 ATRAPA Y CLASIFICA</span><strong id="catchCounter">1/${mission.items.length}</strong></div><div class="catch-zone"><div class="falling-card" id="fallingCard"></div></div><div class="catch-bins"></div>`;
+  const bins = game.querySelector(".catch-bins");
+  mission.groups.forEach((group, groupIndex) => {
+    const button = document.createElement("button");
+    button.type = "button"; button.innerHTML = `<span>${groupIndex === 0 ? "📦" : "🧰"}</span><strong></strong>`;
+    button.querySelector("strong").textContent = group;
+    button.addEventListener("click", () => {
+      if (state.locked || state.challenge.transitioning) return;
+      state.challenge.transitioning = true;
+      state.challenge.assignments[state.challenge.sortIndex] = groupIndex;
+      state.challenge.sortIndex += 1;
+      if (state.challenge.sortIndex >= mission.items.length) {
+        completeMission(mission.items.every((item, index) => state.challenge.assignments[index] === item.group));
+        return;
+      }
+      showFallingCard();
+      setTimeout(() => { state.challenge.transitioning = false; }, 180);
     });
-    row.append(label, actions); $("#answersGrid").appendChild(row);
+    bins.appendChild(button);
   });
-  const confirm = $("#challengeButton");
-  confirm.textContent = "Comprobar clasificación"; confirm.disabled = true; confirm.classList.remove("is-hidden");
-  confirm.onclick = () => completeMission(mission.items.every((item, index) => state.challenge.assignments[index] === item.group));
+  $("#answersGrid").appendChild(game);
+  const showFallingCard = () => {
+    $("#catchCounter").textContent = `${state.challenge.sortIndex + 1}/${mission.items.length}`;
+    const card = $("#fallingCard"); card.textContent = mission.items[state.challenge.sortIndex].text;
+    card.classList.remove("is-falling"); void card.offsetWidth; card.classList.add("is-falling");
+  };
+  showFallingCard();
 }
 
 function renderScenario(mission) {
   const step = mission.steps[state.challenge.step];
   const grid = $("#answersGrid"); grid.innerHTML = "";
+  const bossHealth = Math.round((mission.steps.length - state.challenge.step) / mission.steps.length * 100);
+  const battle = document.createElement("div"); battle.className = "boss-battle";
+  battle.innerHTML = `<div class="boss-title"><span>⚔️ JEFE FINAL</span><strong>Ronda ${state.challenge.step + 1}/${mission.steps.length}</strong></div><div class="battle-arena"><div class="battle-player"><span>🐦</span><small>Kinti</small></div><div class="battle-flash">VS</div><div class="battle-boss"><span>${BOSS_AVATARS[state.grade]}</span><small>Problema</small></div></div><div class="boss-health"><span style="width:${bossHealth}%"></span></div>`;
+  grid.appendChild(battle);
   const heading = document.createElement("div"); heading.className = "scenario-step";
   heading.innerHTML = `<span>${state.challenge.step + 1}</span><h3></h3>`; heading.querySelector("h3").textContent = step.prompt; grid.appendChild(heading);
   step.options.forEach((option, index) => grid.appendChild(makeAnswerButton(option, index, () => {
-    if (state.locked) return;
+    if (state.locked || state.challenge.transitioning) return;
+    state.challenge.transitioning = true;
+    grid.querySelectorAll("button").forEach(button => { button.disabled = true; });
     state.challenge.stepAnswers.push(index);
-    if (state.challenge.step < mission.steps.length - 1) { state.challenge.step += 1; renderScenario(mission); }
+    playTone(index === step.correct ? "correct" : "incorrect");
+    if (state.challenge.step < mission.steps.length - 1) { state.challenge.step += 1; setTimeout(() => { state.challenge.transitioning = false; renderScenario(mission); }, 260); }
     else completeMission(mission.steps.every((item, stepIndex) => state.challenge.stepAnswers[stepIndex] === item.correct));
   })));
 }
@@ -275,13 +341,15 @@ function completeMission(isCorrect) {
     state.streak += 1; state.maxStreak = Math.max(state.maxStreak, state.streak); state.correct += 1;
     state.points += (mission.type === "question" ? 100 : 160) + Math.min((state.streak - 1) * 20, 60);
   } else { state.streak = 0; state.mistakes += 1; }
+  const isPrizeMission = mission.type === "question" && state.index === SWEET_MISSIONS[state.grade];
+  if (isPrizeMission && isCorrect) state.sweetUnlocked = true;
   if (mission.type !== "question") state.keys += 1;
   state.answers.push({ category: mission.category, correct: isCorrect, type: mission.type });
   updateHud();
   const feedback = $("#feedbackBox"); feedback.classList.remove("is-hidden"); feedback.classList.toggle("is-error", !isCorrect);
   $("#feedbackIcon").textContent = isCorrect ? "✓" : "!";
-  $("#feedbackTitle").textContent = isCorrect ? (mission.type === "question" ? "¡Decisión acertada!" : "¡Reto conquistado!") : "Buen intento: descubriste una pista";
-  $("#feedbackText").textContent = mission.feedback;
+  $("#feedbackTitle").textContent = isPrizeMission && isCorrect ? "🍬 ¡Cupón de dulce desbloqueado!" : isPrizeMission ? "El dulce se escapó, pero ganaste una pista" : isCorrect ? (mission.type === "question" ? "¡Decisión acertada!" : "¡Reto conquistado!") : "Buen intento: descubriste una pista";
+  $("#feedbackText").textContent = isPrizeMission && isCorrect ? `${mission.feedback} Presenta tu cupón final a Profe Anita.` : mission.feedback;
   const next = $("#nextButton"); next.classList.remove("is-hidden");
   next.firstChild.textContent = state.index === 9 ? "Ver mi diagnóstico " : "Siguiente misión ";
   playTone(isCorrect ? "correct" : "incorrect"); next.focus();
@@ -311,6 +379,7 @@ function getBadges(includeBonus = false) {
   if (state.mistakes > 0) badges.push({ icon: "🔥", name: "Mente resiliente", text: "Continuó aprendiendo después de equivocarse" });
   if (state.maxStreak >= 3) badges.push({ icon: "⚡", name: "Racha maestra", text: `Alcanzó ${state.maxStreak} aciertos consecutivos` });
   if (state.correct >= 9) badges.push({ icon: "🏆", name: "Dominio emprendedor", text: "Demostró dominio destacado" });
+  if (state.sweetUnlocked) badges.push({ icon: "🍬", name: "Pregunta Premio", text: "Cupón de dulce pendiente de validación docente" });
   if (includeBonus) badges.push({ icon: "🎟️", name: "Bono desbloqueado", text: level.reward });
   return badges;
 }
@@ -334,6 +403,7 @@ function renderResults() {
   $("#scoreRing").style.background = `conic-gradient(${level.color} ${state.correct * 10}%, #dfe5f4 0)`;
   $("#resultLevel").textContent = overall.label; $("#recommendationText").textContent = overall.message;
   $("#resultName").textContent = state.student; $("#resultCourse").textContent = `${state.grade}.º ${state.parallel}`; $("#finalPoints").textContent = state.points.toLocaleString("es-EC");
+  $("#sweetReward").classList.toggle("is-hidden", !state.sweetUnlocked);
   $("#bonusName").textContent = level.reward; $("#reflectionInput").value = "";
   $("#bonusCard").classList.add("is-locked"); $("#bonusCard").classList.remove("is-unlocked"); $("#bonusIcon").textContent = "🔒";
   $("#bonusDescription").textContent = "Completa tu reflexión para desbloquear un punto adicional en la primera prueba de unidad.";
@@ -368,6 +438,7 @@ async function persistResult(grouped) {
       keys: state.keys,
       maxStreak: state.maxStreak,
       performance: getOverallLevel(state.correct).label,
+      sweetUnlocked: state.sweetUnlocked,
       skills,
       badges: getBadges().map(badge => badge.name)
     });
