@@ -15,12 +15,12 @@ service cloud.firestore {
       return request.resource.data.keys().hasAll([
           "student", "grade", "parallel", "levelCode", "correct", "total",
           "points", "keys", "maxStreak", "performance", "skills", "badges",
-          "ownerUid", "bonusUnlocked", "reflection", "createdAt", "updatedAt", "schemaVersion"
+          "ownerUid", "bonusUnlocked", "sweetUnlocked", "reflection", "createdAt", "updatedAt", "schemaVersion"
         ])
         && request.resource.data.keys().hasOnly([
           "student", "grade", "parallel", "levelCode", "correct", "total",
           "points", "keys", "maxStreak", "performance", "skills", "badges",
-          "ownerUid", "bonusUnlocked", "reflection", "createdAt", "updatedAt", "schemaVersion"
+          "ownerUid", "bonusUnlocked", "sweetUnlocked", "reflection", "createdAt", "updatedAt", "schemaVersion"
         ])
         && request.resource.data.student is string
         && request.resource.data.student.size() >= 1
@@ -33,6 +33,7 @@ service cloud.firestore {
         && request.resource.data.total == 10
         && request.resource.data.ownerUid == request.auth.uid
         && request.resource.data.bonusUnlocked == false
+        && request.resource.data.sweetUnlocked is bool
         && request.resource.data.reflection == ""
         && request.resource.data.schemaVersion == 1;
     }
