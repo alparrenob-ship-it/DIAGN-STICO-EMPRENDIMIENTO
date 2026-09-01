@@ -44,4 +44,6 @@ Sube los dos archivos modificados a la rama `main`. GitHub Pages se actualizará
 3. Entra con el correo autorizado y confirma que aparece el resultado.
 4. Prueba **Descargar CSV** y **Guardar PDF**.
 
+El dashboard también registra la **Pregunta Premio** y muestra qué estudiantes obtuvieron el cupón de dulce para validación docente.
+
 La página docente quedará disponible en `https://alparrenob-ship-it.github.io/DIAGN-STICO-EMPRENDIMIENTO/docente.html`.
