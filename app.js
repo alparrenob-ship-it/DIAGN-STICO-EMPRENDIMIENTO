@@ -1,64 +1,85 @@
 const LEVELS = {
-  4: { code: "DISCOVER", label: "Descubrir", avatar: "🔎", difficulty: "Nivel inicial", color: "#25c2d6" },
-  5: { code: "CREATE", label: "Crear", avatar: "💡", difficulty: "Nivel explorador", color: "#6554e8" },
-  6: { code: "BUILD", label: "Construir", avatar: "🛠️", difficulty: "Nivel constructor", color: "#ff9d42" },
-  7: { code: "SCALE", label: "Escalar", avatar: "🚀", difficulty: "Nivel startup", color: "#ff6689" }
+  4: { code: "DISCOVER", label: "Descubrir", avatar: "🔎", difficulty: "Entrepreneur Mindset", color: "#25c2d6", reward: "Moneda Semilla +1", badge: ["🔎", "Detector de oportunidades", "Reconoce necesidades y propone ideas"] },
+  5: { code: "CREATE", label: "Crear", avatar: "💡", difficulty: "Innovation Mindset", color: "#6554e8", reward: "Pase de Innovación +1", badge: ["💡", "Creador de soluciones", "Aplica creatividad y Design Thinking"] },
+  6: { code: "BUILD", label: "Construir", avatar: "🛠️", difficulty: "Business Mindset", color: "#ff9d42", reward: "Capital Inicial +1", badge: ["🛠️", "Constructor de negocios", "Conecta mercado, valor y finanzas"] },
+  7: { code: "SCALE", label: "Escalar", avatar: "🚀", difficulty: "Startup Mindset", color: "#ff6689", reward: "Golden Ticket Series A +1", badge: ["🚀", "Fundador de startup", "Valida, escala y usa tecnología con propósito"] }
 };
 
-const QUESTION_BANK = {
+const q = (category, title, options, correct, feedback) => ({ type: "question", category, title, options, correct, feedback });
+const collect = (category, title, instruction, items, correct, feedback) => ({ type: "collect", category, title, instruction, items, correct, feedback });
+const sequence = (category, title, instruction, items, correct, feedback) => ({ type: "sequence", category, title, instruction, items, correct, feedback });
+const sort = (category, title, instruction, groups, items, feedback) => ({ type: "sort", category, title, instruction, groups, items, feedback });
+const scenario = (category, title, instruction, steps, feedback) => ({ type: "scenario", category, title, instruction, steps, feedback });
+
+const MISSION_BANK = {
   4: [
-    { category: "Necesidades y problemas", question: "En el recreo, varios estudiantes no encuentran dónde colocar las botellas vacías. ¿Qué identificó una persona emprendedora?", options: ["Un problema que puede resolverse", "Un premio para ganar", "Una razón para no hacer nada", "Un producto que ya está terminado"], correct: 0, feedback: "Emprender comienza al observar una necesidad o un problema que afecta a otras personas." },
-    { category: "Necesidades y problemas", question: "¿Cuál de estas opciones es una necesidad básica?", options: ["Tomar agua cuando tienes sed", "Comprar el juguete más nuevo", "Cambiar de mochila cada semana", "Tener todos los videojuegos"], correct: 0, feedback: "Una necesidad es algo importante para vivir o estar bien; un deseo es algo que queremos, pero no siempre necesitamos." },
-    { category: "Producto y servicio", question: "Sofía elabora separadores de libros y los vende en una feria. ¿Qué ofrece?", options: ["Un producto", "Un servicio", "Un préstamo", "Una deuda"], correct: 0, feedback: "Un producto es un objeto que se crea para satisfacer una necesidad o un deseo." },
-    { category: "Producto y servicio", question: "Mateo ayuda a pasear perros y recibe un pago. ¿Qué ofrece?", options: ["Un servicio", "Una materia prima", "Un producto de fábrica", "Una moneda"], correct: 0, feedback: "Un servicio es una actividad que una persona realiza para ayudar o atender a otra." },
-    { category: "Cliente y valor", question: "Si diseñas loncheras para estudiantes, ¿quiénes serían tus posibles clientes?", options: ["Las personas que necesitan o comprarían las loncheras", "Solo quienes fabrican lápices", "Únicamente los profesores", "Nadie, porque no hay que preguntar"], correct: 0, feedback: "El cliente es la persona que necesita, elige o compra un producto o servicio." },
-    { category: "Cliente y valor", question: "Antes de crear un producto, la mejor decisión es…", options: ["Preguntar a las personas qué necesitan", "Copiar sin preguntar", "Fabricar muchas unidades de inmediato", "Elegir solo lo que me gusta a mí"], correct: 0, feedback: "Escuchar a las personas ayuda a crear algo realmente útil para ellas." },
-    { category: "Dinero y ahorro", question: "Una pulsera cuesta $2 en materiales y se vende en $3. ¿Cuánto queda como ganancia simple?", options: ["$1", "$2", "$3", "$5"], correct: 0, feedback: "La ganancia simple se obtiene al restar el costo al precio de venta: $3 − $2 = $1." },
-    { category: "Dinero y ahorro", question: "Recibes $5 y decides guardar $2 para una meta futura. ¿Qué estás haciendo?", options: ["Ahorrando", "Gastando todo", "Pidiendo prestado", "Subiendo el precio"], correct: 0, feedback: "Ahorrar es separar una parte del dinero para usarla después en una meta o necesidad." },
-    { category: "Creatividad y equipo", question: "Tu primera idea no funciona como esperabas. ¿Qué haría un emprendedor?", options: ["La mejora y vuelve a probar", "Se rinde de inmediato", "Culpa a los demás", "Oculta el problema"], correct: 0, feedback: "Las personas emprendedoras aprenden de los errores, mejoran sus ideas y perseveran." },
-    { category: "Creatividad y equipo", question: "En un equipo emprendedor, ¿qué acción ayuda más?", options: ["Escuchar, repartir tareas y colaborar", "Hacer todo sin comunicar", "Competir con el propio equipo", "Ignorar las ideas diferentes"], correct: 0, feedback: "Un equipo funciona mejor cuando escucha, organiza responsabilidades y valora las ideas de todos." }
+    q("Necesidades y problemas", "En el recreo no hay dónde colocar botellas vacías. ¿Qué identificó una persona emprendedora?", ["Un problema que puede resolverse", "Un premio para ganar", "Una razón para no actuar", "Un producto terminado"], 0, "Emprender comienza al observar una necesidad o un problema que afecta a otras personas."),
+    collect("Necesidades y problemas", "Reto: detective de necesidades", "Selecciona todas las situaciones que representan una necesidad o problema real.", ["Un estudiante no tiene dónde guardar su botella", "Querer el videojuego más nuevo", "Las plantas del aula se secan durante las vacaciones", "Cambiar de mochila cada semana", "Se desperdicia mucha comida en el recreo"], [0, 2, 4], "Las oportunidades aparecen cuando observamos dificultades reales que afectan a otras personas o al entorno."),
+    q("Producto y servicio", "Mateo ayuda a pasear perros y recibe un pago. ¿Qué ofrece?", ["Un servicio", "Una materia prima", "Un producto de fábrica", "Una moneda"], 0, "Un servicio es una actividad que una persona realiza para ayudar o atender a otra."),
+    sort("Producto y servicio", "Reto: los dos cofres", "Clasifica cada ejemplo como producto o servicio.", ["Producto", "Servicio"], [{ text: "Separador de libros", group: 0 }, { text: "Pasear una mascota", group: 1 }, { text: "Pulsera artesanal", group: 0 }, { text: "Ayudar a ordenar una biblioteca", group: 1 }], "Un producto es un objeto; un servicio es una actividad que resuelve una necesidad."),
+    q("Cliente y valor", "Si diseñas loncheras para estudiantes, ¿quiénes serían tus posibles clientes?", ["Quienes necesitan o comprarían las loncheras", "Solo quienes fabrican lápices", "Únicamente los profesores", "Nadie, porque no hay que preguntar"], 0, "El cliente es la persona que necesita, elige o compra un producto o servicio."),
+    collect("Cliente y valor", "Reto: encuentra al cliente", "Una botella pequeña y resistente fue creada para llevar agua durante la jornada escolar. Selecciona a sus clientes más probables.", ["Estudiantes", "Familias que preparan la mochila", "Una fábrica de muebles", "Personas que nunca usan botellas", "Docentes que llevan agua al aula"], [0, 1, 4], "El cliente correcto comparte la necesidad que nuestro producto busca resolver."),
+    q("Dinero y ahorro", "Una pulsera cuesta $2 en materiales y se vende en $3. ¿Cuánto queda como ganancia simple?", ["$1", "$2", "$3", "$5"], 0, "La ganancia simple se obtiene al restar el costo al precio de venta: $3 − $2 = $1."),
+    sort("Dinero y ahorro", "Reto: protege tus monedas", "Decide si cada acción representa ahorro o gasto.", ["Ahorro", "Gasto"], [{ text: "Guardar $2 para comprar materiales", group: 0 }, { text: "Comprar un dulce", group: 1 }, { text: "Separar monedas para una meta", group: 0 }, { text: "Pagar por una cartulina", group: 1 }], "Ahorrar es reservar dinero para una meta; gastar es usarlo para adquirir algo."),
+    q("Creatividad y equipo", "Tu primera idea no funciona. ¿Qué haría una persona emprendedora?", ["La mejora y vuelve a probar", "Se rinde de inmediato", "Culpa a los demás", "Oculta el problema"], 0, "Las personas emprendedoras aprenden, mejoran sus ideas y perseveran."),
+    scenario("Reto integrador", "Jefe de nivel: prepara el Idea Day", "Toma tres decisiones para presentar una idea útil en la mini feria.", [
+      { prompt: "Primero debes elegir una oportunidad.", options: ["Muchos niños pierden sus lápices", "Copiar un producto sin preguntar", "Vender cualquier cosa"], correct: 0 },
+      { prompt: "¿Qué solución responde mejor al problema?", options: ["Un organizador de lápices con nombre", "Una pulsera decorativa", "Un afiche sin utilidad"], correct: 0 },
+      { prompt: "¿Qué haces antes de producir muchos?", options: ["Muestras un ejemplo y preguntas opiniones", "Fabricas cien de inmediato", "Ignoras al cliente"], correct: 0 }
+    ], "Una idea emprendedora conecta un problema real, una solución útil y la opinión de sus clientes.")
   ],
   5: [
-    { category: "Design Thinking", question: "Un equipo quiere mejorar el recreo escolar. ¿Cuál debería ser su primer paso?", options: ["Observar y escuchar a los estudiantes", "Construir la solución final", "Elegir un precio", "Crear publicidad"], correct: 0, feedback: "Design Thinking inicia con empatizar: observar, escuchar y comprender a las personas." },
-    { category: "Design Thinking", question: "Después de conversar con los usuarios, el equipo organiza lo aprendido y expresa el reto con claridad. ¿Qué etapa realiza?", options: ["Definir", "Vender", "Producir", "Ahorrar"], correct: 0, feedback: "Definir consiste en convertir los hallazgos en un problema claro que guíe el proyecto." },
-    { category: "Creatividad y prototipo", question: "¿Qué acción representa mejor la etapa de idear?", options: ["Proponer muchas soluciones antes de elegir", "Quedarse con la primera idea", "Calcular únicamente el precio", "Fabricar cien unidades"], correct: 0, feedback: "Idear significa generar varias alternativas creativas y luego seleccionar la más útil y posible." },
-    { category: "Creatividad y prototipo", question: "¿Para qué sirve un prototipo?", options: ["Para representar, probar y mejorar una idea", "Para evitar escuchar opiniones", "Para reemplazar al cliente", "Para asegurar ganancias"], correct: 0, feedback: "Un prototipo es una versión sencilla de la solución que permite aprender antes de construir el producto final." },
-    { category: "Marca y cliente", question: "¿Qué hace que una marca sea fácil de reconocer?", options: ["Un nombre, identidad y mensaje coherentes", "Cambiar de nombre todos los días", "Copiar exactamente a otra empresa", "No explicar qué ofrece"], correct: 0, feedback: "Una marca comunica quién es el emprendimiento y ayuda a diferenciarlo." },
-    { category: "Marca y cliente", question: "Al probar un producto, tres usuarios dicen que la tapa es difícil de abrir. ¿Qué conviene hacer?", options: ["Registrar el comentario y mejorar la tapa", "Ignorar a los usuarios", "Cambiar solo el logotipo", "Venderlo sin probar otra vez"], correct: 0, feedback: "El feedback ayuda a iterar: probar, aprender, mejorar y volver a probar." },
-    { category: "Producción y calidad", question: "Para preparar jugo natural, las frutas son…", options: ["Materia prima", "Ganancia", "Publicidad", "Cliente"], correct: 0, feedback: "La materia prima es el material que se transforma para elaborar un producto." },
-    { category: "Producción y calidad", question: "¿Qué demuestra calidad en un producto?", options: ["Cumple bien su función y está cuidadosamente elaborado", "Es el más caro sin razón", "Tiene muchos colores", "Se fabricó rápidamente aunque falle"], correct: 0, feedback: "La calidad significa cumplir lo prometido y satisfacer adecuadamente la necesidad del cliente." },
-    { category: "Costos y utilidad", question: "Crear una libreta cuesta $4 y se vende en $6. ¿Cuál es la utilidad por unidad?", options: ["$2", "$4", "$6", "$10"], correct: 0, feedback: "La utilidad por unidad es precio de venta menos costo: $6 − $4 = $2." },
-    { category: "Tecnología con propósito", question: "¿Cuál es un uso útil de una página web para un emprendimiento?", options: ["Mostrar información clara sobre sus productos", "Publicar datos privados de clientes", "Copiar contenido sin permiso", "Prometer resultados falsos"], correct: 0, feedback: "La tecnología aporta valor cuando informa, conecta o resuelve una necesidad de manera segura y responsable." }
+    q("Design Thinking", "Un equipo quiere mejorar el recreo escolar. ¿Cuál debería ser su primer paso?", ["Observar y escuchar a los estudiantes", "Construir la solución final", "Elegir un precio", "Crear publicidad"], 0, "Design Thinking inicia con empatizar: observar, escuchar y comprender a las personas."),
+    sequence("Design Thinking", "Reto: activa la ruta de innovación", "Toca las fases en el orden correcto.", ["Prototipar", "Empatizar", "Testear", "Idear", "Definir"], ["Empatizar", "Definir", "Idear", "Prototipar", "Testear"], "La ruta es: empatizar, definir, idear, prototipar y testear."),
+    q("Creatividad y prototipo", "¿Qué acción representa mejor la etapa de idear?", ["Proponer muchas soluciones antes de elegir", "Quedarse con la primera idea", "Calcular únicamente el precio", "Fabricar cien unidades"], 0, "Idear significa generar varias alternativas y seleccionar la más útil y posible."),
+    collect("Empatía", "Reto: entrevista al usuario", "Selecciona todas las preguntas que ayudan a comprender al usuario.", ["¿Qué dificultad tienes?", "¿Cómo te sientes cuando ocurre?", "¿Te gusta mi idea aunque aún no la conoces?", "¿Qué solución utilizas ahora?", "¿Cuánto dinero tengo yo?"], [0, 1, 3], "Una buena entrevista explora experiencias, emociones y soluciones actuales sin inducir respuestas."),
+    q("Prototipado", "¿Para qué sirve un prototipo?", ["Para representar, probar y mejorar una idea", "Para evitar escuchar opiniones", "Para reemplazar al cliente", "Para asegurar ganancias"], 0, "Un prototipo permite aprender antes de construir el producto final."),
+    sort("Feedback e iteración", "Reto: laboratorio de feedback", "Clasifica las decisiones según ayuden o no a mejorar el prototipo.", ["Ayuda a mejorar", "No ayuda"], [{ text: "Registrar lo que dijo el usuario", group: 0 }, { text: "Ignorar una falla repetida", group: 1 }, { text: "Cambiar una parte y volver a probar", group: 0 }, { text: "Defender la idea sin escuchar", group: 1 }], "El feedback se convierte en aprendizaje cuando se registra, analiza y usa para iterar."),
+    q("Marca y cliente", "¿Qué hace que una marca sea fácil de reconocer?", ["Un nombre, identidad y mensaje coherentes", "Cambiar de nombre todos los días", "Copiar exactamente a otra empresa", "No explicar qué ofrece"], 0, "Una marca comunica quién es el emprendimiento y ayuda a diferenciarlo."),
+    sequence("Producción y calidad", "Reto: enciende la cadena productiva", "Ordena el proceso para transformar una idea en un producto de calidad.", ["Controlar la calidad", "Conseguir materia prima", "Entregar al cliente", "Transformar los materiales"], ["Conseguir materia prima", "Transformar los materiales", "Controlar la calidad", "Entregar al cliente"], "Producir implica conseguir materiales, transformarlos, verificar la calidad y entregar valor."),
+    q("Costos y utilidad", "Crear una libreta cuesta $4 y se vende en $6. ¿Cuál es la utilidad por unidad?", ["$2", "$4", "$6", "$10"], 0, "La utilidad por unidad es precio de venta menos costo: $6 − $4 = $2."),
+    scenario("Reto integrador", "Jefe de nivel: rescata el Innovation Lab", "Completa la ruta para transformar un problema en una solución probada.", [
+      { prompt: "Los estudiantes pierden sus tareas. ¿Qué haces primero?", options: ["Los entrevistas y observas", "Diseñas una app final", "Creas publicidad"], correct: 0 },
+      { prompt: "Descubres que olvidan revisar la agenda. ¿Qué construyes?", options: ["Un prototipo sencillo de recordatorio", "Cien productos", "Un logo sin solución"], correct: 0 },
+      { prompt: "Tres usuarios no entienden un botón. ¿Qué haces?", options: ["Lo mejoras y vuelves a probar", "Ignoras el comentario", "Cambias de problema"], correct: 0 }
+    ], "Design Thinking convierte la empatía en una solución que se prueba, aprende y mejora.")
   ],
   6: [
-    { category: "Mercado y cliente", question: "Un equipo crea termos reutilizables para deportistas. ¿Qué debe investigar primero sobre su mercado?", options: ["Quién los necesita, qué valora y cuánto estaría dispuesto a pagar", "Solo el color favorito del equipo", "El nombre de una empresa famosa", "Cuántos seguidores tiene el profesor"], correct: 0, feedback: "Conocer al cliente y su contexto permite diseñar una propuesta basada en evidencia." },
-    { category: "Mercado y cliente", question: "¿Para qué se analiza a la competencia?", options: ["Para identificar alternativas, aprender y diferenciarse", "Para copiar exactamente su producto", "Para impedir que otros vendan", "Para evitar hablar con clientes"], correct: 0, feedback: "Analizar la competencia ayuda a comprender el mercado y construir una diferencia valiosa." },
-    { category: "Propuesta y modelo", question: "¿Cuál es la propuesta de valor más clara?", options: ["Botella resistente que mantiene fría el agua durante la jornada escolar", "Vendemos cosas muy buenas", "Somos los mejores porque sí", "Tenemos muchos colores y nada más"], correct: 0, feedback: "Una propuesta de valor explica qué beneficio ofrece, a quién y por qué resulta diferente o útil." },
-    { category: "Propuesta y modelo", question: "En un modelo Canvas, el bloque “segmentos de clientes” responde principalmente a…", options: ["¿Para quién creamos valor?", "¿Qué color tendrá el logo?", "¿Quién decorará el aula?", "¿Cuándo inicia el recreo?"], correct: 0, feedback: "Los segmentos de clientes identifican a los grupos de personas para quienes se diseña la solución." },
-    { category: "Finanzas", question: "¿Cuál es un costo variable en un negocio de galletas?", options: ["La harina usada en cada lote", "El permiso anual del negocio", "El diseño inicial del logotipo", "Una mesa comprada una sola vez"], correct: 0, feedback: "Un costo variable cambia según la cantidad producida; al hacer más galletas se necesita más harina." },
-    { category: "Finanzas", question: "Un emprendimiento recibe $120 por ventas y gasta $80. ¿Cuál es su utilidad simple?", options: ["$40", "$80", "$120", "$200"], correct: 0, feedback: "La utilidad simple se calcula restando los gastos o costos a los ingresos: $120 − $80 = $40." },
-    { category: "Validación y métricas", question: "¿Cuál es una evidencia útil para validar una idea?", options: ["Resultados de pruebas y opiniones de usuarios reales", "La opinión de una sola persona del equipo", "El número de colores del prototipo", "Una suposición sin comprobar"], correct: 0, feedback: "Validar significa comprobar las suposiciones con usuarios, pruebas y datos." },
-    { category: "Validación y métricas", question: "De 20 estudiantes que probaron una app, 15 dijeron que la usarían otra vez. ¿Qué métrica aporta este dato?", options: ["Intención de reutilización: 15 de 20", "Costo fijo", "Cantidad de competidores", "Valor de la materia prima"], correct: 0, feedback: "Una métrica convierte una observación en un dato que ayuda a decidir y mejorar." },
-    { category: "Tecnología y Web3", question: "¿Cuál describe mejor una blockchain?", options: ["Un registro digital compartido, enlazado y difícil de alterar", "Una red social para publicar fotos", "Un videojuego sin internet", "Una carpeta privada de una sola persona"], correct: 0, feedback: "Blockchain registra información en bloques conectados y distribuidos entre participantes de una red." },
-    { category: "Tecnología y Web3", question: "¿Cuándo tiene sentido usar tecnología en un proyecto?", options: ["Cuando mejora la solución o aporta valor al usuario", "Siempre, aunque complique el problema", "Solo para que el proyecto parezca moderno", "Cuando reemplaza toda decisión humana"], correct: 0, feedback: "La tecnología debe responder a una necesidad concreta, no añadirse únicamente por moda." }
+    q("Mercado y cliente", "Un equipo crea termos para deportistas. ¿Qué debe investigar primero?", ["Quién los necesita, qué valora y cuánto pagaría", "Solo el color favorito del equipo", "El nombre de una empresa famosa", "Los seguidores del profesor"], 0, "Conocer al cliente y su contexto permite diseñar una propuesta basada en evidencia."),
+    collect("Mercado y cliente", "Reto: activa el radar de mercado", "Selecciona los datos que realmente ayudan a conocer el mercado.", ["Necesidades del cliente", "Alternativas de la competencia", "Color favorito del equipo", "Precio que el usuario considera justo", "Número de letras del logotipo"], [0, 1, 3], "El mercado se comprende investigando clientes, alternativas, precios y comportamientos."),
+    q("Propuesta de valor", "¿Cuál es la propuesta de valor más clara?", ["Botella resistente que mantiene fría el agua durante la jornada", "Vendemos cosas muy buenas", "Somos los mejores porque sí", "Tenemos muchos colores"], 0, "Una propuesta de valor explica qué beneficio ofrece, a quién y por qué es útil o diferente."),
+    sort("Modelo Canvas", "Reto: reconstruye el Canvas", "Ubica cada elemento en el bloque al que pertenece.", ["Segmento de clientes", "Recursos clave"], [{ text: "Estudiantes deportistas", group: 0 }, { text: "Máquina de impresión", group: 1 }, { text: "Familias que compran termos", group: 0 }, { text: "Equipo de diseño", group: 1 }], "El Canvas conecta a las personas para quienes creamos valor con los recursos necesarios para hacerlo."),
+    q("Finanzas", "¿Cuál es un costo variable en un negocio de galletas?", ["La harina usada en cada lote", "El permiso anual", "El diseño inicial del logo", "Una mesa comprada una vez"], 0, "Un costo variable cambia según la cantidad producida."),
+    sort("Finanzas", "Reto: clasificador financiero", "Clasifica los costos de una pequeña cafetería.", ["Costo fijo", "Costo variable"], [{ text: "Arriendo mensual", group: 0 }, { text: "Fruta para cada batido", group: 1 }, { text: "Internet mensual", group: 0 }, { text: "Vasos usados por venta", group: 1 }], "Los costos fijos se mantienen durante un periodo; los variables cambian con la producción o las ventas."),
+    q("Validación y métricas", "¿Cuál es una evidencia útil para validar una idea?", ["Pruebas y opiniones de usuarios reales", "La opinión de una sola persona del equipo", "El número de colores", "Una suposición sin comprobar"], 0, "Validar significa comprobar nuestras suposiciones con usuarios, pruebas y datos."),
+    collect("Validación y métricas", "Reto: bóveda de evidencias", "Selecciona todas las evidencias que servirían para decidir si una app funciona.", ["Usuarios que regresan cada semana", "Entrevistas después de probarla", "La intuición del líder", "Cantidad de tareas completadas", "El color preferido del programador"], [0, 1, 3], "Las métricas y el feedback convierten suposiciones en decisiones fundamentadas."),
+    q("Tecnología y Web3", "¿Cuál describe mejor una blockchain?", ["Un registro digital compartido, enlazado y difícil de alterar", "Una red social de fotos", "Un videojuego sin internet", "Una carpeta de una sola persona"], 0, "Blockchain registra información en bloques conectados y distribuidos entre participantes de una red."),
+    scenario("Reto integrador", "Jefe de nivel: consigue la Seed Round", "Toma decisiones para presentar un negocio listo para recibir inversión.", [
+      { prompt: "Las ventas son bajas. ¿Qué analizas primero?", options: ["Cliente, competencia y propuesta de valor", "Solo el logo", "El nombre del equipo"], correct: 0 },
+      { prompt: "Tienes $100 de inversión. ¿Qué decisión es responsable?", options: ["Crear y probar un lote pequeño", "Gastar todo en decoración", "Producir sin presupuesto"], correct: 0 },
+      { prompt: "¿Qué dato mostrarías al inversionista?", options: ["Resultados de pruebas y costos", "Una promesa sin evidencia", "Solo una animación"], correct: 0 }
+    ], "Una inversión se solicita con un mercado comprendido, un modelo claro, finanzas responsables y evidencia.")
   ],
   7: [
-    { category: "Oportunidad e innovación", question: "¿Cuál situación representa una oportunidad de innovación?", options: ["Un problema frecuente sin una solución satisfactoria", "Una idea que no beneficia a nadie", "Copiar un producto sin cambios", "Usar tecnología sin propósito"], correct: 0, feedback: "Una oportunidad aparece cuando existe una necesidad relevante y espacio para crear una solución mejor." },
-    { category: "Oportunidad e innovación", question: "En SCAMPER, la pregunta “¿qué función podríamos reemplazar?” corresponde a…", options: ["Sustituir", "Combinar", "Eliminar", "Reordenar"], correct: 0, feedback: "SCAMPER impulsa nuevas ideas mediante acciones como sustituir, combinar, adaptar, modificar, proponer otros usos, eliminar y reordenar." },
-    { category: "MVP y validación", question: "¿Qué es un MVP?", options: ["La versión mínima funcional para probar la hipótesis principal", "El producto final con todas las funciones", "Una presentación sin prototipo", "Una campaña de publicidad"], correct: 0, feedback: "El MVP permite validar lo esencial con el menor esfuerzo necesario antes de invertir más recursos." },
-    { category: "MVP y validación", question: "Una app tuvo 100 registros, pero solo 12 usuarios regresaron la semana siguiente. ¿Qué revela esta métrica?", options: ["Existe baja retención y se debe investigar por qué", "La idea ya está totalmente validada", "El precio es necesariamente correcto", "La blockchain funciona bien"], correct: 0, feedback: "La retención muestra cuántas personas continúan usando la solución; un dato bajo exige investigar y mejorar." },
-    { category: "Modelo y escalabilidad", question: "¿Qué hace escalable a un modelo de negocio digital?", options: ["Puede atender a más usuarios sin aumentar los costos al mismo ritmo", "Necesita duplicar todos sus recursos por cada cliente", "Depende de un único comprador", "No mide sus resultados"], correct: 0, feedback: "Escalar implica crecer de manera sostenible, aumentando el impacto o los ingresos con eficiencia." },
-    { category: "Modelo y escalabilidad", question: "¿Qué debe comunicar primero un pitch para inversionistas?", options: ["El problema, la solución, la evidencia y el modelo de negocio", "Solo el nombre del equipo", "Una lista de colores de la marca", "Únicamente las herramientas digitales usadas"], correct: 0, feedback: "Un pitch sólido conecta problema, solución, mercado, validación, modelo y equipo con datos claros." },
-    { category: "Finanzas estratégicas", question: "Si durante un mes entra menos dinero del que sale, el flujo de caja es…", options: ["Negativo", "Positivo", "Igual a la utilidad anual", "Automáticamente escalable"], correct: 0, feedback: "El flujo de caja es negativo cuando las salidas de dinero superan las entradas durante un periodo." },
-    { category: "Finanzas estratégicas", question: "¿Cuál sería una reinversión responsable?", options: ["Usar parte de la utilidad para mejorar el producto basándose en datos", "Gastar toda la utilidad sin plan", "Solicitar deuda sin calcular pagos", "Ocultar los costos del proyecto"], correct: 0, feedback: "Reinvertir responsablemente significa destinar recursos al crecimiento después de analizar necesidades, riesgos y resultados." },
-    { category: "Web3 y blockchain", question: "¿Qué ventaja puede aportar blockchain a un proyecto de trazabilidad?", options: ["Registrar el recorrido de un producto de forma verificable", "Garantizar que todo negocio tendrá ganancias", "Eliminar la necesidad de proteger datos", "Convertir cualquier imagen en una empresa"], correct: 0, feedback: "Blockchain puede aportar trazabilidad y verificación, pero debe justificarse según el problema y proteger los datos." },
-    { category: "IA y tecnología ética", question: "Un equipo usa IA para recomendar hábitos de estudio. ¿Cuál es la decisión más responsable?", options: ["Proteger datos, revisar resultados y mantener supervisión humana", "Publicar información personal", "Aceptar toda respuesta de la IA como verdadera", "Ocultar que se usa IA"], correct: 0, feedback: "La IA responsable exige privacidad, transparencia, revisión crítica y supervisión humana." }
+    q("Oportunidad e innovación", "¿Cuál situación representa una oportunidad de innovación?", ["Un problema frecuente sin solución satisfactoria", "Una idea que no beneficia a nadie", "Copiar sin cambios", "Usar tecnología sin propósito"], 0, "Una oportunidad aparece cuando existe una necesidad relevante y espacio para crear una solución mejor."),
+    collect("Innovación y SCAMPER", "Reto: activa SCAMPER", "Selecciona las acciones que ayudan a transformar creativamente una idea.", ["Sustituir una parte", "Combinar funciones", "Copiar exactamente", "Adaptar a otro usuario", "Ignorar el problema"], [0, 1, 3], "SCAMPER propone sustituir, combinar, adaptar, modificar, dar otros usos, eliminar y reordenar."),
+    q("MVP y validación", "¿Qué es un MVP?", ["La versión mínima funcional para probar la hipótesis principal", "El producto final con todas las funciones", "Una presentación sin prototipo", "Una campaña publicitaria"], 0, "El MVP valida lo esencial antes de invertir más recursos."),
+    sort("MVP y priorización", "Reto: construye el MVP", "Una app escolar conecta estudiantes con tutorías. Clasifica las funciones.", ["Esencial para probar", "Puede esperar"], [{ text: "Solicitar una tutoría", group: 0 }, { text: "Perfil con veinte avatares", group: 1 }, { text: "Confirmar horario", group: 0 }, { text: "Tienda de accesorios digitales", group: 1 }], "Un MVP incluye solo lo necesario para probar si la solución realmente aporta valor."),
+    q("Métricas y datos", "Una app tuvo 100 registros, pero solo 12 usuarios regresaron. ¿Qué revela?", ["Existe baja retención y debemos investigar", "La idea está totalmente validada", "El precio es correcto", "La blockchain funciona"], 0, "La retención muestra cuántas personas continúan usando la solución."),
+    collect("Métricas y datos", "Reto: detective de métricas", "Selecciona las métricas que ayudan a saber si una solución genera valor.", ["Usuarios activos", "Retención semanal", "Cantidad de efectos visuales", "Tareas completadas", "Horas invertidas en el logo"], [0, 1, 3], "Las métricas útiles observan comportamiento, uso, permanencia y resultados."),
+    q("Modelo y escalabilidad", "¿Qué hace escalable a un modelo digital?", ["Atiende más usuarios sin aumentar costos al mismo ritmo", "Duplica todos sus recursos por cliente", "Depende de un comprador", "No mide resultados"], 0, "Escalar implica crecer de manera sostenible y eficiente."),
+    sort("IA y tecnología ética", "Reto: verificador tecnológico", "Clasifica las decisiones sobre IA, datos y blockchain.", ["Uso responsable", "Uso riesgoso"], [{ text: "Proteger datos personales", group: 0 }, { text: "Aceptar toda respuesta de IA", group: 1 }, { text: "Justificar por qué usar blockchain", group: 0 }, { text: "Publicar información privada", group: 1 }], "La tecnología con propósito exige privacidad, pensamiento crítico, transparencia y justificación."),
+    q("Web3 y blockchain", "¿Qué ventaja puede aportar blockchain a la trazabilidad?", ["Registrar el recorrido de un producto de forma verificable", "Garantizar ganancias", "Eliminar la protección de datos", "Convertir cualquier imagen en empresa"], 0, "Blockchain puede aportar trazabilidad cuando su uso está justificado y protege los datos."),
+    scenario("Reto integrador", "Jefe de nivel: presenta tu Series A", "Completa las decisiones clave de un pitch para inversionistas.", [
+      { prompt: "¿Cómo debes iniciar el pitch?", options: ["Con un problema relevante y evidencia", "Con los colores del logo", "Con todas las funciones futuras"], correct: 0 },
+      { prompt: "¿Qué demuestra que el MVP genera valor?", options: ["Usuarios, pruebas y métricas", "Una opinión del equipo", "Una promesa"], correct: 0 },
+      { prompt: "¿Qué debe explicar la solicitud de inversión?", options: ["Cuánto se necesita, para qué y qué resultado se espera", "Solo que se necesita dinero", "Un gasto sin presupuesto"], correct: 0 }
+    ], "Un pitch de inversión conecta problema, solución, validación, modelo escalable y uso claro de los recursos.")
   ]
 };
 
-const state = { student: "", grade: 4, parallel: "", index: 0, points: 0, lives: 3, streak: 0, correct: 0, answers: [], sound: true, locked: false };
-
-const $ = (selector) => document.querySelector(selector);
+const state = { student: "", grade: 4, parallel: "", index: 0, points: 0, keys: 0, streak: 0, maxStreak: 0, correct: 0, mistakes: 0, answers: [], sound: true, locked: false, challenge: null, bonusUnlocked: false };
+const $ = selector => document.querySelector(selector);
 const screens = { start: $("#startScreen"), game: $("#gameScreen"), result: $("#resultScreen") };
 
 function showScreen(name) {
@@ -75,174 +96,276 @@ function playTone(type) {
     const oscillator = ctx.createOscillator();
     const gain = ctx.createGain();
     oscillator.connect(gain); gain.connect(ctx.destination);
-    oscillator.frequency.value = type === "correct" ? 620 : 210;
-    oscillator.type = type === "correct" ? "sine" : "triangle";
+    oscillator.frequency.value = type === "correct" ? 620 : type === "unlock" ? 760 : 210;
+    oscillator.type = type === "incorrect" ? "triangle" : "sine";
     gain.gain.setValueAtTime(.08, ctx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(.001, ctx.currentTime + .22);
-    oscillator.start(); oscillator.stop(ctx.currentTime + .22);
-  } catch (_) { /* El juego sigue funcionando si el navegador bloquea el audio. */ }
+    gain.gain.exponentialRampToValueAtTime(.001, ctx.currentTime + .25);
+    oscillator.start(); oscillator.stop(ctx.currentTime + .25);
+  } catch (_) { /* El juego continúa si el navegador bloquea el audio. */ }
 }
 
 function beginGame(event) {
   event.preventDefault();
   const data = new FormData(event.currentTarget);
-  state.student = data.get("studentName").trim();
-  state.grade = Number(data.get("grade"));
-  state.parallel = data.get("parallel");
-  state.index = 0; state.points = 0; state.lives = 3; state.streak = 0; state.correct = 0; state.answers = []; state.locked = false;
-
+  Object.assign(state, { student: data.get("studentName").trim(), grade: Number(data.get("grade")), parallel: data.get("parallel"), index: 0, points: 0, keys: 0, streak: 0, maxStreak: 0, correct: 0, mistakes: 0, answers: [], locked: false, challenge: null, bonusUnlocked: false });
   const level = LEVELS[state.grade];
   $("#hudAvatar").textContent = level.avatar;
   $("#hudName").textContent = state.student;
   $("#hudGrade").textContent = `${state.grade}.º ${state.parallel} · ${level.code}`;
   showScreen("game");
-  renderQuestion();
+  renderMission();
 }
 
-function renderQuestion() {
-  state.locked = false;
-  const question = QUESTION_BANK[state.grade][state.index];
-  const level = LEVELS[state.grade];
-  const current = state.index + 1;
-  const progress = current * 10;
+function renderTrail() {
+  const trail = $("#missionTrail");
+  trail.innerHTML = "";
+  MISSION_BANK[state.grade].forEach((mission, index) => {
+    const node = document.createElement("div");
+    node.className = "mission-node";
+    if (mission.type !== "question") node.classList.add("is-challenge");
+    if (index < state.index) node.classList.add("is-done");
+    if (index === state.index) node.classList.add("is-current");
+    node.innerHTML = `<span>${index < state.index ? "✓" : index + 1}</span><small>${mission.type === "question" ? "PREGUNTA" : "RETO"}</small>`;
+    trail.appendChild(node);
+  });
+}
 
-  $("#missionLabel").textContent = `Misión ${current} de 10`;
+function renderMission() {
+  state.locked = false;
+  state.challenge = { selected: [], assignments: {}, sequence: [], step: 0, stepAnswers: [] };
+  const mission = MISSION_BANK[state.grade][state.index];
+  const level = LEVELS[state.grade];
+  const progress = (state.index + 1) * 10;
+  $("#missionLabel").textContent = `Misión ${state.index + 1} de 10`;
   $("#progressPercent").textContent = `${progress}%`;
   $("#progressBar").style.width = `${progress}%`;
   $(".progress-track").setAttribute("aria-valuenow", String(progress));
-  $("#categoryBadge").textContent = question.category;
+  $("#categoryBadge").textContent = mission.type === "question" ? mission.category : `♦ RETO · ${mission.category}`;
   $("#difficultyBadge").textContent = level.difficulty;
-  $("#questionText").textContent = question.question;
-  $("#scoreValue").textContent = state.points.toLocaleString("es-EC");
-  $("#livesValue").textContent = `${"● ".repeat(state.lives)}${"○ ".repeat(3 - state.lives)}`.trim();
-  $("#livesValue").setAttribute("aria-label", `${state.lives} de 3 puntos de energía`);
-  $("#streakValue").textContent = `🔥 ${state.streak}`;
+  $("#questionText").textContent = mission.title;
+  $("#questionHint").textContent = mission.type === "question" ? "Elige la opción que consideres correcta." : mission.instruction;
+  updateHud(); renderTrail();
   $("#feedbackBox").classList.add("is-hidden");
   $("#feedbackBox").classList.remove("is-error");
   $("#nextButton").classList.add("is-hidden");
-
-  const answers = $("#answersGrid");
-  answers.innerHTML = "";
-  question.options.forEach((option, index) => {
-    const button = document.createElement("button");
-    button.className = "answer-button";
-    button.type = "button";
-    button.innerHTML = `<span class="answer-letter">${String.fromCharCode(65 + index)}</span><span></span>`;
-    button.lastElementChild.textContent = option;
-    button.addEventListener("click", () => selectAnswer(index));
-    answers.appendChild(button);
-  });
+  $("#challengeButton").classList.add("is-hidden");
+  $("#answersGrid").innerHTML = "";
+  if (mission.type === "question") renderQuestion(mission);
+  if (mission.type === "collect") renderCollect(mission);
+  if (mission.type === "sequence") renderSequence(mission);
+  if (mission.type === "sort") renderSort(mission);
+  if (mission.type === "scenario") renderScenario(mission);
 }
 
-function selectAnswer(selectedIndex) {
+function makeAnswerButton(text, index, handler, letter = true) {
+  const button = document.createElement("button");
+  button.className = "answer-button"; button.type = "button";
+  button.innerHTML = `${letter ? `<span class="answer-letter">${String.fromCharCode(65 + index)}</span>` : ""}<span></span>`;
+  button.lastElementChild.textContent = text;
+  button.addEventListener("click", handler);
+  return button;
+}
+
+function renderQuestion(mission) {
+  mission.options.forEach((option, index) => $("#answersGrid").appendChild(makeAnswerButton(option, index, () => completeQuestion(index))));
+}
+
+function completeQuestion(selectedIndex) {
+  if (state.locked) return;
+  const mission = MISSION_BANK[state.grade][state.index];
+  const correct = selectedIndex === mission.correct;
+  [...document.querySelectorAll(".answer-button")].forEach((button, index) => {
+    button.disabled = true;
+    if (index === mission.correct) button.classList.add("correct");
+    if (index === selectedIndex && !correct) button.classList.add("incorrect");
+  });
+  completeMission(correct);
+}
+
+function renderCollect(mission) {
+  const confirm = $("#challengeButton");
+  mission.items.forEach((item, index) => {
+    const button = makeAnswerButton(item, index, () => {
+      if (state.locked) return;
+      const position = state.challenge.selected.indexOf(index);
+      if (position >= 0) state.challenge.selected.splice(position, 1); else state.challenge.selected.push(index);
+      button.classList.toggle("is-selected");
+      confirm.disabled = state.challenge.selected.length === 0;
+    });
+    $("#answersGrid").appendChild(button);
+  });
+  confirm.textContent = "Comprobar selección"; confirm.disabled = true; confirm.classList.remove("is-hidden");
+  confirm.onclick = () => {
+    const selected = [...state.challenge.selected].sort((a, b) => a - b);
+    const correct = [...mission.correct].sort((a, b) => a - b);
+    completeMission(JSON.stringify(selected) === JSON.stringify(correct));
+  };
+}
+
+function renderSequence(mission) {
+  const board = document.createElement("div");
+  board.className = "sequence-board";
+  $("#answersGrid").appendChild(board);
+  const confirm = $("#challengeButton");
+  mission.items.forEach((item, index) => {
+    const button = makeAnswerButton(item, index, () => {
+      if (state.locked || state.challenge.sequence.includes(item)) return;
+      state.challenge.sequence.push(item); button.disabled = true; button.classList.add("is-selected");
+      const chip = document.createElement("span");
+      chip.className = "sequence-chip"; chip.textContent = `${state.challenge.sequence.length}. ${item}`; board.appendChild(chip);
+      confirm.disabled = state.challenge.sequence.length !== mission.correct.length;
+    });
+    $("#answersGrid").appendChild(button);
+  });
+  const reset = document.createElement("button");
+  reset.className = "secondary-mini"; reset.type = "button"; reset.textContent = "↺ Reiniciar orden";
+  reset.addEventListener("click", () => {
+    state.challenge.sequence = []; board.innerHTML = "";
+    document.querySelectorAll(".answer-button").forEach(button => { button.disabled = false; button.classList.remove("is-selected"); });
+    confirm.disabled = true;
+  });
+  $("#answersGrid").appendChild(reset);
+  confirm.textContent = "Comprobar orden"; confirm.disabled = true; confirm.classList.remove("is-hidden");
+  confirm.onclick = () => completeMission(JSON.stringify(state.challenge.sequence) === JSON.stringify(mission.correct));
+}
+
+function renderSort(mission) {
+  mission.items.forEach((item, index) => {
+    const row = document.createElement("div"); row.className = "sort-card";
+    const label = document.createElement("strong"); label.textContent = item.text;
+    const actions = document.createElement("div"); actions.className = "sort-actions";
+    mission.groups.forEach((group, groupIndex) => {
+      const button = document.createElement("button"); button.type = "button"; button.textContent = group;
+      button.addEventListener("click", () => {
+        if (state.locked) return;
+        state.challenge.assignments[index] = groupIndex;
+        [...actions.children].forEach(child => child.classList.remove("is-selected")); button.classList.add("is-selected");
+        $("#challengeButton").disabled = Object.keys(state.challenge.assignments).length !== mission.items.length;
+      });
+      actions.appendChild(button);
+    });
+    row.append(label, actions); $("#answersGrid").appendChild(row);
+  });
+  const confirm = $("#challengeButton");
+  confirm.textContent = "Comprobar clasificación"; confirm.disabled = true; confirm.classList.remove("is-hidden");
+  confirm.onclick = () => completeMission(mission.items.every((item, index) => state.challenge.assignments[index] === item.group));
+}
+
+function renderScenario(mission) {
+  const step = mission.steps[state.challenge.step];
+  const grid = $("#answersGrid"); grid.innerHTML = "";
+  const heading = document.createElement("div"); heading.className = "scenario-step";
+  heading.innerHTML = `<span>${state.challenge.step + 1}</span><h3></h3>`; heading.querySelector("h3").textContent = step.prompt; grid.appendChild(heading);
+  step.options.forEach((option, index) => grid.appendChild(makeAnswerButton(option, index, () => {
+    if (state.locked) return;
+    state.challenge.stepAnswers.push(index);
+    if (state.challenge.step < mission.steps.length - 1) { state.challenge.step += 1; renderScenario(mission); }
+    else completeMission(mission.steps.every((item, stepIndex) => state.challenge.stepAnswers[stepIndex] === item.correct));
+  })));
+}
+
+function completeMission(isCorrect) {
   if (state.locked) return;
   state.locked = true;
-  const question = QUESTION_BANK[state.grade][state.index];
-  const isCorrect = selectedIndex === question.correct;
-  const buttons = [...document.querySelectorAll(".answer-button")];
-  buttons.forEach((button, index) => {
-    button.disabled = true;
-    if (index === question.correct) button.classList.add("correct");
-    if (index === selectedIndex && !isCorrect) button.classList.add("incorrect");
-  });
-
+  const mission = MISSION_BANK[state.grade][state.index];
+  document.querySelectorAll("#answersGrid button, #challengeButton").forEach(button => button.disabled = true);
   if (isCorrect) {
-    state.streak += 1;
-    state.correct += 1;
-    state.points += 100 + Math.min((state.streak - 1) * 20, 60);
-  } else {
-    state.streak = 0;
-    state.lives = Math.max(0, state.lives - 1);
-  }
-
-  state.answers.push({ category: question.category, correct: isCorrect });
-  $("#scoreValue").textContent = state.points.toLocaleString("es-EC");
-  $("#livesValue").textContent = `${"● ".repeat(state.lives)}${"○ ".repeat(3 - state.lives)}`.trim();
-  $("#streakValue").textContent = `🔥 ${state.streak}`;
-
-  const feedback = $("#feedbackBox");
-  feedback.classList.remove("is-hidden");
-  feedback.classList.toggle("is-error", !isCorrect);
+    state.streak += 1; state.maxStreak = Math.max(state.maxStreak, state.streak); state.correct += 1;
+    state.points += (mission.type === "question" ? 100 : 160) + Math.min((state.streak - 1) * 20, 60);
+  } else { state.streak = 0; state.mistakes += 1; }
+  if (mission.type !== "question") state.keys += 1;
+  state.answers.push({ category: mission.category, correct: isCorrect, type: mission.type });
+  updateHud();
+  const feedback = $("#feedbackBox"); feedback.classList.remove("is-hidden"); feedback.classList.toggle("is-error", !isCorrect);
   $("#feedbackIcon").textContent = isCorrect ? "✓" : "!";
-  $("#feedbackTitle").textContent = isCorrect ? "¡Decisión acertada!" : "Buen intento: esta es la clave";
-  $("#feedbackText").textContent = question.feedback;
-  const next = $("#nextButton");
-  next.classList.remove("is-hidden");
+  $("#feedbackTitle").textContent = isCorrect ? (mission.type === "question" ? "¡Decisión acertada!" : "¡Reto conquistado!") : "Buen intento: descubriste una pista";
+  $("#feedbackText").textContent = mission.feedback;
+  const next = $("#nextButton"); next.classList.remove("is-hidden");
   next.firstChild.textContent = state.index === 9 ? "Ver mi diagnóstico " : "Siguiente misión ";
-  playTone(isCorrect ? "correct" : "incorrect");
-  next.focus();
+  playTone(isCorrect ? "correct" : "incorrect"); next.focus();
 }
 
-function nextQuestion() {
+function updateHud() {
+  $("#scoreValue").textContent = state.points.toLocaleString("es-EC");
+  $("#keysValue").textContent = `🔑 ${state.keys}/5`;
+  $("#streakValue").textContent = `🔥 ${state.streak}`;
+}
+
+function nextMission() {
   if (!state.locked) return;
-  if (state.index < 9) {
-    state.index += 1;
-    renderQuestion();
-    $("#questionText").focus?.();
-  } else {
-    renderResults();
-  }
+  if (state.index < 9) { state.index += 1; renderMission(); } else renderResults();
 }
 
 function getOverallLevel(score) {
-  if (score >= 9) return { label: "Dominio destacado", message: "Demuestras bases sólidas para asumir retos de mayor complejidad y aplicar tus conocimientos en proyectos." , trophy: "🏆" };
-  if (score >= 7) return { label: "Logro esperado", message: "Tienes buenas bases. El siguiente paso es reforzar algunos conceptos mediante retos prácticos y validación." , trophy: "🌟" };
-  if (score >= 4) return { label: "En desarrollo", message: "Ya reconoces varias ideas importantes. Practicaremos los conceptos con ejemplos, equipos y prototipos." , trophy: "🧭" };
-  return { label: "Bases por construir", message: "Este es tu punto de partida. Comenzaremos con experiencias sencillas para desarrollar cada habilidad paso a paso." , trophy: "🌱" };
+  if (score >= 9) return { label: "Dominio destacado", message: "Demuestras bases sólidas para asumir retos de mayor complejidad y aplicar tus conocimientos en proyectos.", trophy: "🏆" };
+  if (score >= 7) return { label: "Logro esperado", message: "Tienes buenas bases. El siguiente paso es reforzar algunos conceptos mediante retos prácticos y validación.", trophy: "🌟" };
+  if (score >= 4) return { label: "En desarrollo", message: "Ya reconoces ideas importantes. Practicaremos los conceptos con ejemplos, equipos y prototipos.", trophy: "🧭" };
+  return { label: "Bases por construir", message: "Este es tu punto de partida. Comenzaremos con experiencias sencillas para desarrollar cada habilidad paso a paso.", trophy: "🌱" };
+}
+
+function getBadges(includeBonus = false) {
+  const level = LEVELS[state.grade];
+  const badges = [{ icon: "🧭", name: "Explorador persistente", text: "Completó las 10 misiones" }, { icon: level.badge[0], name: level.badge[1], text: level.badge[2] }];
+  if (state.mistakes > 0) badges.push({ icon: "🔥", name: "Mente resiliente", text: "Continuó aprendiendo después de equivocarse" });
+  if (state.maxStreak >= 3) badges.push({ icon: "⚡", name: "Racha maestra", text: `Alcanzó ${state.maxStreak} aciertos consecutivos` });
+  if (state.correct >= 9) badges.push({ icon: "🏆", name: "Dominio emprendedor", text: "Demostró dominio destacado" });
+  if (includeBonus) badges.push({ icon: "🎟️", name: "Bono desbloqueado", text: level.reward });
+  return badges;
+}
+
+function renderBadges(includeBonus = false) {
+  const shelf = $("#badgeShelf"); shelf.innerHTML = "";
+  getBadges(includeBonus).forEach(badge => {
+    const item = document.createElement("div"); item.className = "earned-badge";
+    item.innerHTML = `<span></span><strong></strong><small></small>`;
+    item.querySelector("span").textContent = badge.icon; item.querySelector("strong").textContent = badge.name; item.querySelector("small").textContent = badge.text;
+    shelf.appendChild(item);
+  });
 }
 
 function renderResults() {
-  const level = LEVELS[state.grade];
-  const overall = getOverallLevel(state.correct);
+  const level = LEVELS[state.grade]; const overall = getOverallLevel(state.correct);
   $("#resultTrophy").textContent = overall.trophy;
   $("#resultTitle").textContent = `¡Misión ${level.code} completada!`;
-  $("#resultSummary").textContent = `${state.student}, terminaste las 10 misiones del nivel ${level.label}.`;
+  $("#resultSummary").textContent = `${state.student}, conquistaste las 10 misiones y reuniste las 5 llaves.`;
   $("#finalCorrect").textContent = state.correct;
   $("#scoreRing").style.background = `conic-gradient(${level.color} ${state.correct * 10}%, #dfe5f4 0)`;
-  $("#resultLevel").textContent = overall.label;
-  $("#recommendationText").textContent = overall.message;
-  $("#resultName").textContent = state.student;
-  $("#resultCourse").textContent = `${state.grade}.º ${state.parallel}`;
-  $("#finalPoints").textContent = state.points.toLocaleString("es-EC");
-
+  $("#resultLevel").textContent = overall.label; $("#recommendationText").textContent = overall.message;
+  $("#resultName").textContent = state.student; $("#resultCourse").textContent = `${state.grade}.º ${state.parallel}`; $("#finalPoints").textContent = state.points.toLocaleString("es-EC");
+  $("#bonusName").textContent = level.reward; $("#reflectionInput").value = "";
+  $("#bonusCard").classList.add("is-locked"); $("#bonusCard").classList.remove("is-unlocked"); $("#bonusIcon").textContent = "🔒";
+  $("#bonusDescription").textContent = "Completa tu reflexión para desbloquear un punto adicional en la primera prueba de unidad.";
   const grouped = {};
-  state.answers.forEach(answer => {
-    if (!grouped[answer.category]) grouped[answer.category] = { correct: 0, total: 0 };
-    grouped[answer.category].total += 1;
-    if (answer.correct) grouped[answer.category].correct += 1;
-  });
-
-  const list = $("#skillsList");
-  list.innerHTML = "";
+  state.answers.forEach(answer => { if (!grouped[answer.category]) grouped[answer.category] = { correct: 0, total: 0 }; grouped[answer.category].total += 1; if (answer.correct) grouped[answer.category].correct += 1; });
+  const list = $("#skillsList"); list.innerHTML = "";
   Object.entries(grouped).forEach(([category, result]) => {
     const percentage = Math.round(result.correct / result.total * 100);
     const status = percentage === 100 ? "Fortaleza" : percentage >= 50 ? "En desarrollo" : "Reforzar";
-    const row = document.createElement("div");
-    row.className = "skill-row";
+    const row = document.createElement("div"); row.className = "skill-row";
     row.innerHTML = `<div><strong></strong><span></span></div><div class="skill-track"><i></i></div>`;
-    row.querySelector("strong").textContent = category;
-    row.querySelector("span").textContent = `${result.correct}/${result.total} · ${status}`;
-    row.querySelector("i").style.width = `${percentage}%`;
-    list.appendChild(row);
+    row.querySelector("strong").textContent = category; row.querySelector("span").textContent = `${result.correct}/${result.total} · ${status}`; row.querySelector("i").style.width = `${percentage}%`; list.appendChild(row);
   });
-
-  showScreen("result");
-  playTone("correct");
+  renderBadges(); showScreen("result"); playTone("correct");
 }
 
-function resetGame() {
-  $("#playerForm").reset();
-  showScreen("start");
-  $("#studentName").focus();
+function unlockBonus() {
+  const reflection = $("#reflectionInput").value.trim();
+  if (reflection.length < 20) {
+    $("#reflectionInput").focus(); $("#reflectionInput").setCustomValidity("Escribe una reflexión de al menos 20 caracteres."); $("#reflectionInput").reportValidity(); return;
+  }
+  $("#reflectionInput").setCustomValidity(""); state.bonusUnlocked = true;
+  const card = $("#bonusCard"); card.classList.remove("is-locked"); card.classList.add("is-unlocked");
+  $("#bonusIcon").textContent = "🎟️";
+  $("#bonusDescription").textContent = `${state.student} obtuvo este beneficio por completar las 10 misiones y reflexionar sobre su aprendizaje.`;
+  renderBadges(true); playTone("unlock");
 }
 
+function resetGame() { $("#playerForm").reset(); showScreen("start"); $("#studentName").focus(); }
 $("#playerForm").addEventListener("submit", beginGame);
-$("#nextButton").addEventListener("click", nextQuestion);
+$("#nextButton").addEventListener("click", nextMission);
 $("#restartButton").addEventListener("click", resetGame);
 $("#printButton").addEventListener("click", () => window.print());
-$("[data-action='home']").addEventListener("click", (event) => { event.preventDefault(); resetGame(); });
-$("#soundButton").addEventListener("click", (event) => {
-  state.sound = !state.sound;
-  event.currentTarget.textContent = state.sound ? "🔊" : "🔇";
-  event.currentTarget.setAttribute("aria-label", state.sound ? "Desactivar sonidos" : "Activar sonidos");
-});
+$("#unlockBonusButton").addEventListener("click", unlockBonus);
+$("#reflectionInput").addEventListener("input", event => event.currentTarget.setCustomValidity(""));
+$("[data-action='home']").addEventListener("click", event => { event.preventDefault(); resetGame(); });
+$("#soundButton").addEventListener("click", event => { state.sound = !state.sound; event.currentTarget.textContent = state.sound ? "🔊" : "🔇"; event.currentTarget.setAttribute("aria-label", state.sound ? "Desactivar sonidos" : "Activar sonidos"); });
