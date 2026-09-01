@@ -96,7 +96,8 @@ function renderTable() {
   $("#emptyState").classList.toggle("is-hidden", filteredResults.length > 0);
   filteredResults.forEach(result => {
     const row = document.createElement("tr");
-    row.innerHTML = `<td><strong></strong><small></small></td><td></td><td><strong>${Number(result.correct || 0)}/10</strong><small>${Number(result.keys || 0)}/5 retos</small></td><td><span class="performance-pill"></span></td><td>${Number(result.points || 0).toLocaleString("es-EC")}</td><td class="${result.bonusUnlocked ? "bonus-yes" : ""}">${result.bonusUnlocked ? "✓ +1" : "Pendiente"}</td><td>${formatDate(result.createdAt)}</td>`;
+    const prizes = [result.bonusUnlocked ? "🎟️ +1" : "", result.sweetUnlocked ? "🍬 Dulce" : ""].filter(Boolean).join(" · ") || "Pendiente";
+    row.innerHTML = `<td><strong></strong><small></small></td><td></td><td><strong>${Number(result.correct || 0)}/10</strong><small>${Number(result.keys || 0)}/5 retos</small></td><td><span class="performance-pill"></span></td><td>${Number(result.points || 0).toLocaleString("es-EC")}</td><td class="${result.bonusUnlocked || result.sweetUnlocked ? "bonus-yes" : ""}">${prizes}</td><td>${formatDate(result.createdAt)}</td>`;
     row.children[0].querySelector("strong").textContent = result.student || "Sin identificación";
     row.children[0].querySelector("small").textContent = (result.badges || []).join(" · ") || "Sin insignias";
     row.children[1].textContent = `${result.grade}.º ${result.parallel} · ${result.levelCode}`;
@@ -130,8 +131,8 @@ async function login() {
 }
 
 function downloadCsv() {
-  const headers = ["Estudiante o código", "Curso", "Paralelo", "Nivel", "Correctas", "Total", "Puntos", "Desempeño", "Bono +1", "Reflexión", "Insignias", "Fecha"];
-  const rows = filteredResults.map(item => [item.student, item.grade, item.parallel, item.levelCode, item.correct, item.total, item.points, item.performance, item.bonusUnlocked ? "Sí" : "No", item.reflection || "", (item.badges || []).join(" | "), formatDate(item.createdAt)]);
+  const headers = ["Estudiante o código", "Curso", "Paralelo", "Nivel", "Correctas", "Total", "Puntos", "Desempeño", "Bono +1", "Cupón dulce", "Reflexión", "Insignias", "Fecha"];
+  const rows = filteredResults.map(item => [item.student, item.grade, item.parallel, item.levelCode, item.correct, item.total, item.points, item.performance, item.bonusUnlocked ? "Sí" : "No", item.sweetUnlocked ? "Sí" : "No", item.reflection || "", (item.badges || []).join(" | "), formatDate(item.createdAt)]);
   const csv = "\ufeff" + [headers, ...rows].map(row => row.map(csvSafe).join(",")).join("\n");
   const link = document.createElement("a");
   link.href = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8" }));
