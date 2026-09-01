@@ -131,14 +131,40 @@ async function login() {
 }
 
 function downloadCsv() {
-  const headers = ["Estudiante o código", "Curso", "Paralelo", "Nivel", "Correctas", "Total", "Puntos", "Desempeño", "Bono +1", "Cupón dulce", "Reflexión", "Insignias", "Fecha"];
-  const rows = filteredResults.map(item => [item.student, item.grade, item.parallel, item.levelCode, item.correct, item.total, item.points, item.performance, item.bonusUnlocked ? "Sí" : "No", item.sweetUnlocked ? "Sí" : "No", item.reflection || "", (item.badges || []).join(" | "), formatDate(item.createdAt)]);
-  const csv = "\ufeff" + [headers, ...rows].map(row => row.map(csvSafe).join(",")).join("\n");
+  const headers = ["Estudiante o código", "Curso", "Paralelo", "Nivel", "Correctas", "Total", "Nivel diagnóstico", "Detalle por habilidad", "Puntos de juego", "Bono +1", "Cupón dulce", "Reflexión", "Insignias", "Fecha"];
+  const rows = filteredResults.map(item => [item.student, item.grade, item.parallel, item.levelCode, item.correct, item.total, item.performance, (item.skills || []).map(skill => `${skill.category}: ${skill.correct}/${skill.total}`).join(" | "), item.points, item.bonusUnlocked ? "Sí" : "No", item.sweetUnlocked ? "Sí" : "No", item.reflection || "", (item.badges || []).join(" | "), formatDate(item.createdAt)]);
+  downloadCsvFile([headers, ...rows], `resultados-diagnostico-${new Date().toISOString().slice(0, 10)}.csv`);
+}
+
+function downloadCsvFile(rows, filename) {
+  const csv = "\ufeff" + rows.map(row => row.map(csvSafe).join(",")).join("\n");
   const link = document.createElement("a");
   link.href = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8" }));
-  link.download = `diagnostico-emprendimiento-${new Date().toISOString().slice(0, 10)}.csv`;
+  link.download = filename;
   link.click();
   URL.revokeObjectURL(link.href);
+}
+
+function downloadRubricCsv() {
+  const rows = [
+    ["RÚBRICA DIAGNÓSTICA — MISIÓN EMPRENDE"],
+    ["Propósito", "Identificar conocimientos previos; no corresponde a una calificación sumativa."],
+    ["Estructura", "5 preguntas conceptuales (5 puntos) + 5 retos de aplicación (5 puntos)"],
+    ["Resultado", "Nivel diagnóstico", "Evidencia observada", "Decisión pedagógica sugerida"],
+    ["9-10", "Dominio destacado", "Reconoce conceptos y los aplica con seguridad en situaciones nuevas.", "Profundización, liderazgo y creación."],
+    ["7-8", "Logro esperado", "Comprende las bases y aplica la mayoría de los aprendizajes.", "Consolidar conceptos puntuales mediante práctica y validación."],
+    ["4-6", "En desarrollo", "Reconoce algunos conceptos, pero necesita apoyo para aplicarlos.", "Ejemplos, modelado, equipos y prototipos guiados."],
+    ["0-3", "Bases por construir", "Presenta conocimientos iniciales o respuestas todavía intuitivas.", "Experiencias concretas, vocabulario esencial y acompañamiento."],
+    [],
+    ["Curso", "Focos diagnósticos"],
+    ["4.º DISCOVER", "Necesidades y problemas; producto y servicio; cliente y valor; dinero, ahorro y actitud emprendedora."],
+    ["5.º CREATE", "Design Thinking; empatía y prototipo; feedback y marca; producción, calidad, costos y utilidad."],
+    ["6.º BUILD", "Mercado y propuesta de valor; Canvas; finanzas; validación, métricas, tecnología y blockchain."],
+    ["7.º SCALE", "Innovación y MVP; métricas y escalabilidad; IA ética, Web3, blockchain, pitch e inversión."],
+    [],
+    ["Nota", "Monedas, puntos de juego, rapidez, rachas, llaves, dulce y Bono +1 no modifican el resultado diagnóstico."]
+  ];
+  downloadCsvFile(rows, "rubrica-diagnostica-emprendimiento.csv");
 }
 
 if (!isFirebaseConfigured()) {
@@ -166,4 +192,5 @@ $("#logoutButton").addEventListener("click", () => signOut(auth));
 [$("#gradeFilter"), $("#parallelFilter"), $("#performanceFilter")].forEach(filter => filter.addEventListener("change", applyFilters));
 $("#clearFilters").addEventListener("click", () => { $("#gradeFilter").value = "all"; $("#parallelFilter").value = "all"; $("#performanceFilter").value = "all"; applyFilters(); });
 $("#csvButton").addEventListener("click", downloadCsv);
+$("#rubricCsvButton").addEventListener("click", downloadRubricCsv);
 $("#pdfButton").addEventListener("click", () => window.print());
