@@ -26,7 +26,9 @@
         <div class="mission-copy">
           <span class="eyebrow">Evaluación diagnóstica gamificada</span>
           <h1>Tu aventura emprendedora empieza aquí</h1>
-          <p>Supera 10 misiones, toma decisiones y descubre tus fortalezas. No necesitas estudiar: responde con lo que ya sabes.</p>
+          <p>Supera 10 misiones, conquista 5 retos y descubre tus fortalezas. No necesitas estudiar: responde con lo que ya sabes.</p>
+
+          <div class="reward-ribbon"><span aria-hidden="true">🎟️</span><div><strong>Recompensa final</strong><small>Desbloquea un Bono +1 para tu primera prueba de unidad</small></div></div>
 
           <div class="route-preview" aria-label="Ruta de aprendizaje">
             <div><span>1</span><strong>DISCOVER</strong><small>4.º · Descubrir</small></div>
@@ -68,7 +70,7 @@
         <div class="game-hud">
           <div class="player-chip"><span id="hudAvatar">🚀</span><div><small id="hudGrade">Nivel</small><strong id="hudName">Explorador</strong></div></div>
           <div class="hud-stat"><small>Puntos</small><strong id="scoreValue">0</strong></div>
-          <div class="hud-stat"><small>Energía</small><strong id="livesValue" aria-label="3 puntos de energía">● ● ●</strong></div>
+          <div class="hud-stat"><small>Llaves</small><strong id="keysValue">🔑 0/5</strong></div>
           <div class="hud-stat"><small>Racha</small><strong id="streakValue">🔥 0</strong></div>
         </div>
 
@@ -77,11 +79,14 @@
           <div class="progress-track" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="10"><span id="progressBar"></span></div>
         </div>
 
+        <div class="mission-trail" id="missionTrail" aria-label="Mapa de las diez misiones"></div>
+
         <article class="question-card">
           <div class="question-meta"><span id="categoryBadge">Creatividad</span><span id="difficultyBadge">Nivel inicial</span></div>
           <h2 id="questionText">Pregunta</h2>
           <p class="question-hint" id="questionHint">Elige la opción que consideres correcta.</p>
           <div class="answers-grid" id="answersGrid"></div>
+          <button class="challenge-button is-hidden" id="challengeButton" type="button">Comprobar reto</button>
 
           <div class="feedback is-hidden" id="feedbackBox" role="status">
             <span class="feedback-icon" id="feedbackIcon">✓</span>
@@ -122,6 +127,26 @@
             </div>
           </article>
         </div>
+
+        <article class="reward-panel">
+          <div class="reward-panel-copy">
+            <span class="eyebrow">Recompensas logradas</span>
+            <h2>Tu vitrina emprendedora</h2>
+            <p>Las insignias reconocen tu esfuerzo, tu perseverancia y las habilidades demostradas durante la misión.</p>
+            <div class="badge-shelf" id="badgeShelf"></div>
+          </div>
+
+          <div class="bonus-card is-locked" id="bonusCard">
+            <div class="bonus-lock" id="bonusIcon" aria-hidden="true">🔒</div>
+            <span class="bonus-label">Beneficio académico</span>
+            <h2 id="bonusName">Bono Semilla +1</h2>
+            <p id="bonusDescription">Completa tu reflexión para desbloquear un punto adicional en la primera prueba de unidad.</p>
+            <label for="reflectionInput">Mi fortaleza es… y necesito mejorar en…</label>
+            <textarea id="reflectionInput" maxlength="240" rows="3" placeholder="Escribe una reflexión breve"></textarea>
+            <button class="bonus-button" id="unlockBonusButton" type="button">Desbloquear mi bono</button>
+            <small>Aplicable sin superar la calificación máxima de 10/10.</small>
+          </div>
+        </article>
       </section>
     </main>
 
