@@ -1,3 +1,5 @@
+import { saveBonusReflection, saveDiagnosticResult } from "./firebase-service.js";
+
 const LEVELS = {
   4: { code: "DISCOVER", label: "Descubrir", avatar: "🔎", difficulty: "Entrepreneur Mindset", color: "#25c2d6", reward: "Moneda Semilla +1", badge: ["🔎", "Detector de oportunidades", "Reconoce necesidades y propone ideas"] },
   5: { code: "CREATE", label: "Crear", avatar: "💡", difficulty: "Innovation Mindset", color: "#6554e8", reward: "Pase de Innovación +1", badge: ["💡", "Creador de soluciones", "Aplica creatividad y Design Thinking"] },
@@ -78,7 +80,7 @@ const MISSION_BANK = {
   ]
 };
 
-const state = { student: "", grade: 4, parallel: "", index: 0, points: 0, keys: 0, streak: 0, maxStreak: 0, correct: 0, mistakes: 0, answers: [], sound: true, locked: false, challenge: null, bonusUnlocked: false };
+const state = { student: "", grade: 4, parallel: "", index: 0, points: 0, keys: 0, streak: 0, maxStreak: 0, correct: 0, mistakes: 0, answers: [], sound: true, locked: false, challenge: null, bonusUnlocked: false, resultId: null };
 const $ = selector => document.querySelector(selector);
 const screens = { start: $("#startScreen"), game: $("#gameScreen"), result: $("#resultScreen") };
 
@@ -107,7 +109,7 @@ function playTone(type) {
 function beginGame(event) {
   event.preventDefault();
   const data = new FormData(event.currentTarget);
-  Object.assign(state, { student: data.get("studentName").trim(), grade: Number(data.get("grade")), parallel: data.get("parallel"), index: 0, points: 0, keys: 0, streak: 0, maxStreak: 0, correct: 0, mistakes: 0, answers: [], locked: false, challenge: null, bonusUnlocked: false });
+  Object.assign(state, { student: data.get("studentName").trim(), grade: Number(data.get("grade")), parallel: data.get("parallel"), index: 0, points: 0, keys: 0, streak: 0, maxStreak: 0, correct: 0, mistakes: 0, answers: [], locked: false, challenge: null, bonusUnlocked: false, resultId: null });
   const level = LEVELS[state.grade];
   $("#hudAvatar").textContent = level.avatar;
   $("#hudName").textContent = state.student;
@@ -346,9 +348,45 @@ function renderResults() {
     row.querySelector("strong").textContent = category; row.querySelector("span").textContent = `${result.correct}/${result.total} · ${status}`; row.querySelector("i").style.width = `${percentage}%`; list.appendChild(row);
   });
   renderBadges(); showScreen("result"); playTone("correct");
+  persistResult(grouped);
 }
 
-function unlockBonus() {
+async function persistResult(grouped) {
+  const sync = $("#syncStatus");
+  sync.className = "sync-status";
+  sync.textContent = "Enviando el resultado al panel docente…";
+  const skills = Object.entries(grouped).map(([category, result]) => ({ category, correct: result.correct, total: result.total }));
+  try {
+    const response = await saveDiagnosticResult({
+      student: state.student,
+      grade: state.grade,
+      parallel: state.parallel,
+      levelCode: LEVELS[state.grade].code,
+      correct: state.correct,
+      total: 10,
+      points: state.points,
+      keys: state.keys,
+      maxStreak: state.maxStreak,
+      performance: getOverallLevel(state.correct).label,
+      skills,
+      badges: getBadges().map(badge => badge.name)
+    });
+    if (!response.configured) {
+      sync.classList.add("is-warning");
+      sync.textContent = "Resultado visible en este dispositivo. La conexión docente está pendiente de configurar.";
+      return;
+    }
+    state.resultId = response.id;
+    sync.classList.add("is-success");
+    sync.textContent = "✓ Resultado enviado de forma segura al panel docente.";
+  } catch (error) {
+    console.error("No se pudo enviar el resultado", error);
+    sync.classList.add("is-warning");
+    sync.textContent = "No se pudo enviar ahora. Conserva este reporte o avisa a tu docente.";
+  }
+}
+
+async function unlockBonus() {
   const reflection = $("#reflectionInput").value.trim();
   if (reflection.length < 20) {
     $("#reflectionInput").focus(); $("#reflectionInput").setCustomValidity("Escribe una reflexión de al menos 20 caracteres."); $("#reflectionInput").reportValidity(); return;
@@ -358,6 +396,17 @@ function unlockBonus() {
   $("#bonusIcon").textContent = "🎟️";
   $("#bonusDescription").textContent = `${state.student} obtuvo este beneficio por completar las 10 misiones y reflexionar sobre su aprendizaje.`;
   renderBadges(true); playTone("unlock");
+  if (state.resultId) {
+    try {
+      await saveBonusReflection(state.resultId, reflection);
+      $("#syncStatus").className = "sync-status is-success";
+      $("#syncStatus").textContent = "✓ Resultado y Bono +1 actualizados en el panel docente.";
+    } catch (error) {
+      console.error("No se pudo actualizar el bono", error);
+      $("#syncStatus").className = "sync-status is-warning";
+      $("#syncStatus").textContent = "El bono está visible aquí, pero no se pudo actualizar en el panel.";
+    }
+  }
 }
 
 function resetGame() { $("#playerForm").reset(); showScreen("start"); $("#studentName").focus(); }
