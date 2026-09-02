@@ -60,6 +60,8 @@ h1, h2 { font-family: "Fredoka", system-ui, sans-serif; margin: 0; line-height: 
 .card-heading p { margin: 0 0 2px; color: var(--muted); font-size: .78rem; font-weight: 800; text-transform: uppercase; letter-spacing: .1em; }
 .card-heading h2 { font-size: 1.35rem; }
 .player-card > label { display: block; margin: 17px 0 7px; font-size: .86rem; font-weight: 800; }
+.student-name-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 17px; }
+.student-name-grid label { display: block; margin-bottom: 7px; font-size: .86rem; font-weight: 800; }
 input[type="text"], select { width: 100%; min-height: 50px; padding: 0 15px; color: var(--ink); background: #f8faff; border: 1.5px solid var(--border); border-radius: 13px; outline: none; }
 input[type="text"]:focus, select:focus { border-color: var(--primary); box-shadow: 0 0 0 4px rgba(101,84,232,.1); }
 .grade-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
@@ -249,6 +251,7 @@ footer { min-height: 64px; display: flex; align-items: center; justify-content: 
   .reward-panel { grid-template-columns: 1fr; }
 }
 @media (max-width: 620px) {
+  .student-name-grid { grid-template-columns: 1fr; }
   .app-shell { width: min(100% - 20px, 1180px); }
   main { padding: 26px 0; align-items: start; }
   .topbar { min-height: 70px; }
