@@ -5,7 +5,6 @@ import { firebaseConfig, isFirebaseConfigured, TEACHER_EMAIL } from "./firebase-
 import { LOGO_DATA_URL } from "./logo-data.js";
 
 const $ = selector => document.querySelector(selector);
-document.querySelectorAll("[data-brand-logo]").forEach(image => { image.src = LOGO_DATA_URL; });
 let auth;
 let db;
 let allResults = [];
