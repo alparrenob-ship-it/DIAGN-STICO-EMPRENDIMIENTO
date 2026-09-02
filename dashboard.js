@@ -18,11 +18,6 @@ function showLogin(message, error = false) {
   $("#loginMessage").classList.toggle("is-error", error);
 }
 
-function csvSafe(value) {
-  const text = String(value ?? "").replaceAll('"', '""');
-  return `"${text}"`;
-}
-
 function formatDate(timestamp) {
   const date = timestamp?.toDate ? timestamp.toDate() : null;
   return date ? new Intl.DateTimeFormat("es-EC", { dateStyle: "short", timeStyle: "short" }).format(date) : "Pendiente";
@@ -130,41 +125,181 @@ async function login() {
   }
 }
 
-function downloadCsv() {
-  const headers = ["Estudiante o código", "Curso", "Paralelo", "Nivel", "Correctas", "Total", "Nivel diagnóstico", "Detalle por habilidad", "Puntos de juego", "Bono +1", "Cupón dulce", "Reflexión", "Insignias", "Fecha"];
-  const rows = filteredResults.map(item => [item.student, item.grade, item.parallel, item.levelCode, item.correct, item.total, item.performance, (item.skills || []).map(skill => `${skill.category}: ${skill.correct}/${skill.total}`).join(" | "), item.points, item.bonusUnlocked ? "Sí" : "No", item.sweetUnlocked ? "Sí" : "No", item.reflection || "", (item.badges || []).join(" | "), formatDate(item.createdAt)]);
-  downloadCsvFile([headers, ...rows], `resultados-diagnostico-${new Date().toISOString().slice(0, 10)}.csv`);
+const excelColors = {
+  navy: "111B3F", purple: "5B3FE4", cyan: "19BFD3", white: "FFFFFF",
+  ink: "172033", soft: "EEF2FF", line: "D9E1F2", green: "DDF5E8",
+  yellow: "FFF0BF", orange: "FFE1C7", red: "FFD9DD", gray: "667085"
+};
+
+function styleTitle(sheet, title, subtitle, endColumn) {
+  sheet.mergeCells(`A1:${endColumn}1`);
+  sheet.getCell("A1").value = title;
+  sheet.getCell("A1").font = { name: "Aptos Display", size: 20, bold: true, color: { argb: excelColors.white } };
+  sheet.getCell("A1").fill = { type: "pattern", pattern: "solid", fgColor: { argb: excelColors.navy } };
+  sheet.getCell("A1").alignment = { vertical: "middle", horizontal: "left" };
+  sheet.getRow(1).height = 36;
+  sheet.mergeCells(`A2:${endColumn}2`);
+  sheet.getCell("A2").value = subtitle;
+  sheet.getCell("A2").font = { name: "Aptos", size: 11, italic: true, color: { argb: excelColors.gray } };
+  sheet.getRow(2).height = 24;
 }
 
-function downloadCsvFile(rows, filename) {
-  const csv = "\ufeff" + rows.map(row => row.map(csvSafe).join(",")).join("\n");
-  const link = document.createElement("a");
-  link.href = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8" }));
-  link.download = filename;
-  link.click();
-  URL.revokeObjectURL(link.href);
+function styleHeader(row) {
+  row.height = 30;
+  row.eachCell(cell => {
+    cell.font = { name: "Aptos", size: 10, bold: true, color: { argb: excelColors.white } };
+    cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: excelColors.purple } };
+    cell.alignment = { vertical: "middle", horizontal: "center", wrapText: true };
+    cell.border = { bottom: { style: "medium", color: { argb: excelColors.cyan } } };
+  });
 }
 
-function downloadRubricCsv() {
-  const rows = [
-    ["RÚBRICA DIAGNÓSTICA — MISIÓN EMPRENDE"],
-    ["Propósito", "Identificar conocimientos previos; no corresponde a una calificación sumativa."],
-    ["Estructura", "5 preguntas conceptuales (5 puntos) + 5 retos de aplicación (5 puntos)"],
-    ["Resultado", "Nivel diagnóstico", "Evidencia observada", "Decisión pedagógica sugerida"],
-    ["9-10", "Dominio destacado", "Reconoce conceptos y los aplica con seguridad en situaciones nuevas.", "Profundización, liderazgo y creación."],
-    ["7-8", "Logro esperado", "Comprende las bases y aplica la mayoría de los aprendizajes.", "Consolidar conceptos puntuales mediante práctica y validación."],
-    ["4-6", "En desarrollo", "Reconoce algunos conceptos, pero necesita apoyo para aplicarlos.", "Ejemplos, modelado, equipos y prototipos guiados."],
-    ["0-3", "Bases por construir", "Presenta conocimientos iniciales o respuestas todavía intuitivas.", "Experiencias concretas, vocabulario esencial y acompañamiento."],
-    [],
-    ["Curso", "Focos diagnósticos"],
-    ["4.º DISCOVER", "Necesidades y problemas; producto y servicio; cliente y valor; dinero, ahorro y actitud emprendedora."],
-    ["5.º CREATE", "Design Thinking; empatía y prototipo; feedback y marca; producción, calidad, costos y utilidad."],
-    ["6.º BUILD", "Mercado y propuesta de valor; Canvas; finanzas; validación, métricas, tecnología y blockchain."],
-    ["7.º SCALE", "Innovación y MVP; métricas y escalabilidad; IA ética, Web3, blockchain, pitch e inversión."],
-    [],
-    ["Nota", "Monedas, puntos de juego, rapidez, rachas, llaves, dulce y Bono +1 no modifican el resultado diagnóstico."]
-  ];
-  downloadCsvFile(rows, "rubrica-diagnostica-emprendimiento.csv");
+function performanceFill(performance) {
+  return {
+    "Dominio destacado": excelColors.green,
+    "Logro esperado": excelColors.yellow,
+    "En desarrollo": excelColors.orange,
+    "Bases por construir": excelColors.red
+  }[performance] || excelColors.soft;
+}
+
+async function downloadExcelReport() {
+  if (!window.ExcelJS) {
+    alert("No se pudo cargar el generador de Excel. Comprueba tu conexión e inténtalo nuevamente.");
+    return;
+  }
+  const button = $("#excelButton");
+  button.disabled = true;
+  button.textContent = "Preparando Excel…";
+  try {
+    const workbook = new ExcelJS.Workbook();
+    workbook.creator = "Misión Emprende · Profe Anita";
+    workbook.subject = "Evaluación diagnóstica de Emprendimiento";
+    workbook.title = "Reporte diagnóstico 4.º a 7.º de EGB";
+    workbook.company = "Eight Academy";
+    workbook.created = new Date();
+
+    const reportDate = new Intl.DateTimeFormat("es-EC", { dateStyle: "long", timeStyle: "short" }).format(new Date());
+    const total = filteredResults.length;
+    const average = total ? filteredResults.reduce((sum, item) => sum + Number(item.correct || 0), 0) / total : 0;
+    const skills = aggregateSkills(filteredResults);
+    const gradeLabel = $("#gradeFilter").selectedOptions[0].textContent;
+    const parallelLabel = $("#parallelFilter").selectedOptions[0].textContent;
+    const performanceLabel = $("#performanceFilter").selectedOptions[0].textContent;
+
+    const summary = workbook.addWorksheet("Resumen pedagógico", { views: [{ showGridLines: false }] });
+    styleTitle(summary, "MISIÓN EMPRENDE · REPORTE DIAGNÓSTICO", "Resumen ejecutivo para la toma de decisiones pedagógicas", "H");
+    summary.columns = [{ width: 23 }, { width: 16 }, { width: 16 }, { width: 16 }, { width: 3 }, { width: 24 }, { width: 15 }, { width: 18 }];
+    summary.addRow([]);
+    summary.addRow(["Fecha de generación", reportDate, "Curso", gradeLabel, "", "Paralelo", parallelLabel]);
+    summary.addRow(["Filtro de desempeño", performanceLabel, "Docente autorizada", TEACHER_EMAIL]);
+    summary.getRows(4, 2).forEach(row => row.eachCell(cell => { cell.font = { name: "Aptos", size: 10, color: { argb: excelColors.ink } }; cell.alignment = { vertical: "middle", wrapText: true }; }));
+    ["A4", "C4", "F4", "A5", "C5"].forEach(ref => { summary.getCell(ref).font = { name: "Aptos", size: 10, bold: true, color: { argb: excelColors.navy } }; });
+    summary.addRow([]);
+    const metricRow = summary.addRow(["PARTICIPANTES", total, "PROMEDIO / 10", Number(average.toFixed(1)), "", "PRIORIDAD DE REFUERZO", skills[0]?.name || "Sin datos"]);
+    metricRow.height = 34;
+    metricRow.eachCell(cell => { cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: excelColors.soft } }; cell.font = { name: "Aptos", size: 11, bold: true, color: { argb: excelColors.navy } }; cell.alignment = { vertical: "middle", wrapText: true }; });
+    summary.addRow([]);
+    summary.addRow(["PROMEDIO POR CURSO", "Participantes", "Promedio", "Nivel predominante"]);
+    styleHeader(summary.getRow(9));
+    [4, 5, 6, 7].forEach(grade => {
+      const group = filteredResults.filter(item => Number(item.grade) === grade);
+      const gradeAverage = group.length ? group.reduce((sum, item) => sum + Number(item.correct || 0), 0) / group.length : 0;
+      const level = gradeAverage >= 9 ? "Dominio destacado" : gradeAverage >= 7 ? "Logro esperado" : gradeAverage >= 4 ? "En desarrollo" : "Bases por construir";
+      const row = summary.addRow([`${grade}.º EGB`, group.length, Number(gradeAverage.toFixed(1)), group.length ? level : "Sin datos"]);
+      row.getCell(4).fill = { type: "pattern", pattern: "solid", fgColor: { argb: performanceFill(level) } };
+    });
+    summary.addRow([]);
+    summary.addRow(["LOGRO POR HABILIDAD", "Aciertos", "Evidencias", "Logro"]);
+    styleHeader(summary.getRow(15));
+    skills.forEach(skill => {
+      const source = filteredResults.flatMap(item => item.skills || []).filter(item => item.category === skill.name);
+      const correct = source.reduce((sum, item) => sum + Number(item.correct || 0), 0);
+      const evidence = source.reduce((sum, item) => sum + Number(item.total || 0), 0);
+      const row = summary.addRow([skill.name, correct, evidence, skill.percentage / 100]);
+      row.getCell(4).numFmt = "0%";
+    });
+    summary.views = [{ state: "frozen", ySplit: 2, showGridLines: false }];
+
+    const results = workbook.addWorksheet("Resultados individuales", { views: [{ state: "frozen", ySplit: 4, xSplit: 1, showGridLines: false }] });
+    styleTitle(results, "RESULTADOS INDIVIDUALES", "Evaluación diagnóstica · Los puntos y premios de juego no alteran el resultado sobre 10", "N");
+    results.columns = [
+      { width: 26 }, { width: 10 }, { width: 10 }, { width: 14 }, { width: 12 }, { width: 23 }, { width: 38 },
+      { width: 15 }, { width: 12 }, { width: 14 }, { width: 34 }, { width: 30 }, { width: 21 }, { width: 18 }
+    ];
+    results.addRow([]);
+    const resultHeader = results.addRow(["Estudiante / código", "Curso", "Paralelo", "Nivel", "Resultado", "Nivel diagnóstico", "Detalle por habilidad", "Puntos de juego", "Bono +1", "Cupón dulce", "Reflexión", "Insignias", "Fecha", "ID de registro"]);
+    styleHeader(resultHeader);
+    filteredResults.forEach((item, index) => {
+      const date = item.createdAt?.toDate ? item.createdAt.toDate() : null;
+      const row = results.addRow([
+        item.student || "Sin identificación", Number(item.grade), item.parallel || "", item.levelCode || "",
+        Number(item.correct || 0), item.performance || "Sin clasificar",
+        (item.skills || []).map(skill => `${skill.category}: ${skill.correct}/${skill.total}`).join(" · "),
+        Number(item.points || 0), item.bonusUnlocked ? "Sí" : "No", item.sweetUnlocked ? "Sí" : "No",
+        item.reflection || "", (item.badges || []).join(" · "), date, item.id || ""
+      ]);
+      row.height = 34;
+      row.eachCell(cell => { cell.font = { name: "Aptos", size: 10, color: { argb: excelColors.ink } }; cell.alignment = { vertical: "middle", wrapText: true }; cell.border = { bottom: { style: "hair", color: { argb: excelColors.line } } }; });
+      row.getCell(5).numFmt = '0"/10"';
+      row.getCell(6).fill = { type: "pattern", pattern: "solid", fgColor: { argb: performanceFill(item.performance) } };
+      row.getCell(13).numFmt = "dd/mm/yyyy hh:mm";
+      if (index % 2 === 1) row.getCell(1).fill = { type: "pattern", pattern: "solid", fgColor: { argb: "F7F9FC" } };
+    });
+    results.autoFilter = { from: "A4", to: "N4" };
+
+    const rubric = workbook.addWorksheet("Rúbrica diagnóstica", { views: [{ state: "frozen", ySplit: 7, showGridLines: false }] });
+    styleTitle(rubric, "RÚBRICA DIAGNÓSTICA · EMPRENDIMIENTO", "Instrumento para interpretar conocimientos previos de 4.º a 7.º de EGB", "D");
+    rubric.columns = [{ width: 17 }, { width: 24 }, { width: 58 }, { width: 58 }];
+    rubric.addRow([]);
+    rubric.addRow(["Propósito", "Identificar conocimientos previos para planificar el acompañamiento; no corresponde a una calificación sumativa."]);
+    rubric.mergeCells("B4:D4");
+    rubric.addRow(["Estructura", "5 preguntas conceptuales (5 puntos) + 5 retos de aplicación (5 puntos) = 10 puntos diagnósticos."]);
+    rubric.mergeCells("B5:D5");
+    rubric.addRow(["Importante", "Monedas, rapidez, rachas, llaves, cupón de dulce y Bono +1 son motivadores y no modifican el resultado diagnóstico."]);
+    rubric.mergeCells("B6:D6");
+    [4, 5, 6].forEach(rowNumber => { rubric.getRow(rowNumber).height = 34; rubric.getRow(rowNumber).eachCell(cell => { cell.alignment = { vertical: "middle", wrapText: true }; cell.font = { name: "Aptos", size: 10, color: { argb: excelColors.ink }, bold: cell.column === 1 }; }); });
+    const rubricHeader = rubric.addRow(["Resultado", "Nivel diagnóstico", "Evidencia observada", "Decisión pedagógica sugerida"]);
+    styleHeader(rubricHeader);
+    [
+      ["9–10", "Dominio destacado", "Reconoce conceptos y los aplica con seguridad en situaciones nuevas.", "Proponer profundización, liderazgo y creación."],
+      ["7–8", "Logro esperado", "Comprende las bases y aplica la mayoría de los aprendizajes.", "Consolidar conceptos puntuales mediante práctica y validación."],
+      ["4–6", "En desarrollo", "Reconoce algunos conceptos, pero necesita apoyo para aplicarlos.", "Trabajar con ejemplos, modelado, equipos y prototipos guiados."],
+      ["0–3", "Bases por construir", "Presenta conocimientos iniciales o respuestas todavía intuitivas.", "Iniciar con experiencias concretas, vocabulario esencial y acompañamiento."]
+    ].forEach(values => {
+      const row = rubric.addRow(values);
+      row.height = 44;
+      row.eachCell(cell => { cell.alignment = { vertical: "middle", wrapText: true }; cell.font = { name: "Aptos", size: 10, color: { argb: excelColors.ink } }; });
+      row.getCell(2).fill = { type: "pattern", pattern: "solid", fgColor: { argb: performanceFill(values[1]) } };
+    });
+    rubric.addRow([]);
+    const focusHeader = rubric.addRow(["Curso", "Trayectoria", "Focos diagnósticos", "Uso pedagógico"]);
+    styleHeader(focusHeader);
+    [
+      ["4.º EGB", "DISCOVER", "Necesidades y problemas; producto y servicio; cliente y valor; dinero, ahorro y actitud emprendedora.", "Reconocer las bases iniciales para construir vocabulario y pensamiento emprendedor."],
+      ["5.º EGB", "CREATE", "Design Thinking; empatía y prototipo; feedback y marca; producción, calidad, costos y utilidad.", "Identificar bases nuevas antes de iniciar experiencias de creación."],
+      ["6.º EGB", "BUILD", "Mercado y propuesta de valor; Canvas; finanzas; validación, métricas, tecnología y blockchain.", "Comprobar la permanencia de aprendizajes trabajados durante el año anterior."],
+      ["7.º EGB", "SCALE", "Innovación y MVP; métricas y escalabilidad; IA ética, Web3, blockchain, pitch e inversión.", "Determinar el nivel de dominio previo antes del trabajo de nivel Hackathon."]
+    ].forEach(values => { const row = rubric.addRow(values); row.height = 52; row.eachCell(cell => { cell.alignment = { vertical: "middle", wrapText: true }; cell.font = { name: "Aptos", size: 10, color: { argb: excelColors.ink } }; }); });
+
+    [summary, results, rubric].forEach(sheet => {
+      sheet.pageSetup = { orientation: "landscape", fitToPage: true, fitToWidth: 1, fitToHeight: 0, margins: { left: 0.25, right: 0.25, top: 0.5, bottom: 0.5, header: 0.2, footer: 0.2 } };
+      sheet.headerFooter.oddFooter = "&LProfe Anita · Misión Emprende&C&P de &N&RReporte confidencial";
+    });
+
+    const buffer = await workbook.xlsx.writeBuffer();
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(new Blob([buffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" }));
+    link.download = `reporte-diagnostico-emprendimiento-${new Date().toISOString().slice(0, 10)}.xlsx`;
+    link.click();
+    setTimeout(() => URL.revokeObjectURL(link.href), 1000);
+  } catch (error) {
+    console.error("Error al generar Excel", error);
+    alert("No fue posible generar el reporte Excel. Inténtalo nuevamente.");
+  } finally {
+    button.disabled = false;
+    button.textContent = "📊 Descargar reporte Excel";
+  }
 }
 
 if (!isFirebaseConfigured()) {
@@ -191,6 +326,5 @@ $("#loginButton").addEventListener("click", login);
 $("#logoutButton").addEventListener("click", () => signOut(auth));
 [$("#gradeFilter"), $("#parallelFilter"), $("#performanceFilter")].forEach(filter => filter.addEventListener("change", applyFilters));
 $("#clearFilters").addEventListener("click", () => { $("#gradeFilter").value = "all"; $("#parallelFilter").value = "all"; $("#performanceFilter").value = "all"; applyFilters(); });
-$("#csvButton").addEventListener("click", downloadCsv);
-$("#rubricCsvButton").addEventListener("click", downloadRubricCsv);
+$("#excelButton").addEventListener("click", downloadExcelReport);
 $("#pdfButton").addEventListener("click", () => window.print());
