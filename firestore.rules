@@ -8,7 +8,7 @@ service cloud.firestore {
     function isTeacher() {
       return signedIn()
         && request.auth.token.email_verified == true
-        && request.auth.token.email == "REEMPLAZAR_CORREO_DOCENTE";
+        && request.auth.token.email == "alparrenob@eightacademy.edu.ec";
     }
 
     function validStudentResult() {
