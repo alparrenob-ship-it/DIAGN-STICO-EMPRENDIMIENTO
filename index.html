@@ -47,8 +47,16 @@
             <div><p>Nueva misión</p><h2>Identifica a tu explorador</h2></div>
           </div>
 
-          <label for="studentName">Nombre o código estudiantil</label>
-          <input id="studentName" name="studentName" type="text" maxlength="60" autocomplete="off" placeholder="Escribe tu nombre o código" required>
+          <div class="student-name-grid">
+            <div>
+              <label for="studentFirstName">Nombre</label>
+              <input id="studentFirstName" name="studentFirstName" type="text" minlength="2" maxlength="30" autocomplete="given-name" placeholder="Escribe tu nombre" required>
+            </div>
+            <div>
+              <label for="studentLastName">Apellido</label>
+              <input id="studentLastName" name="studentLastName" type="text" minlength="2" maxlength="30" autocomplete="family-name" placeholder="Escribe tu apellido" required>
+            </div>
+          </div>
 
           <label for="studentClass">Curso</label>
           <div class="grade-grid" id="gradeGrid" role="radiogroup" aria-label="Selecciona tu curso">
