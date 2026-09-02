@@ -1,7 +1,4 @@
 import { saveBonusReflection, saveDiagnosticResult } from "./firebase-service.js";
-import { LOGO_DATA_URL } from "./logo-data.js";
-
-document.querySelectorAll("[data-brand-logo]").forEach(image => { image.src = LOGO_DATA_URL; });
 
 const LEVELS = {
   4: { code: "DISCOVER", label: "Descubrir", avatar: "🔎", difficulty: "Entrepreneur Mindset", color: "#25c2d6", reward: "Moneda Semilla +1", badge: ["🔎", "Detector de oportunidades", "Reconoce necesidades y propone ideas"] },
