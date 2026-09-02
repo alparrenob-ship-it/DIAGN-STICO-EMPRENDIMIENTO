@@ -127,7 +127,9 @@ function playBeat(step) {
 function beginGame(event) {
   event.preventDefault();
   const data = new FormData(event.currentTarget);
-  Object.assign(state, { student: data.get("studentName").trim(), grade: Number(data.get("grade")), parallel: data.get("parallel"), index: 0, points: 0, keys: 0, streak: 0, maxStreak: 0, correct: 0, mistakes: 0, answers: [], locked: false, challenge: null, bonusUnlocked: false, sweetUnlocked: false, resultId: null });
+  const firstName = data.get("studentFirstName").trim().replace(/\s+/g, " ");
+  const lastName = data.get("studentLastName").trim().replace(/\s+/g, " ");
+  Object.assign(state, { student: `${firstName} ${lastName}`, grade: Number(data.get("grade")), parallel: data.get("parallel"), index: 0, points: 0, keys: 0, streak: 0, maxStreak: 0, correct: 0, mistakes: 0, answers: [], locked: false, challenge: null, bonusUnlocked: false, sweetUnlocked: false, resultId: null });
   const level = LEVELS[state.grade];
   $("#hudAvatar").textContent = level.avatar;
   $("#hudName").textContent = state.student;
@@ -480,7 +482,7 @@ async function unlockBonus() {
   }
 }
 
-function resetGame() { $("#playerForm").reset(); showScreen("start"); $("#studentName").focus(); }
+function resetGame() { $("#playerForm").reset(); showScreen("start"); $("#studentFirstName").focus(); }
 $("#playerForm").addEventListener("submit", beginGame);
 $("#nextButton").addEventListener("click", nextMission);
 $("#restartButton").addEventListener("click", resetGame);
