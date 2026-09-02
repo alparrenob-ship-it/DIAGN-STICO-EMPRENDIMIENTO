@@ -2,8 +2,10 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/11.10.0/fireba
 import { getAuth, GoogleAuthProvider, onAuthStateChanged, signInWithPopup, signOut } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js";
 import { collection, getDocs, getFirestore, orderBy, query } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
 import { firebaseConfig, isFirebaseConfigured, TEACHER_EMAIL } from "./firebase-config.js";
+import { LOGO_DATA_URL } from "./logo-data.js";
 
 const $ = selector => document.querySelector(selector);
+document.querySelectorAll("[data-brand-logo]").forEach(image => { image.src = LOGO_DATA_URL; });
 let auth;
 let db;
 let allResults = [];
@@ -178,6 +180,7 @@ async function downloadExcelReport() {
     workbook.title = "Reporte diagnóstico 4.º a 7.º de EGB";
     workbook.company = "Eight Academy";
     workbook.created = new Date();
+    const logoId = workbook.addImage({ base64: LOGO_DATA_URL, extension: "png" });
 
     const reportDate = new Intl.DateTimeFormat("es-EC", { dateStyle: "long", timeStyle: "short" }).format(new Date());
     const total = filteredResults.length;
@@ -189,6 +192,7 @@ async function downloadExcelReport() {
 
     const summary = workbook.addWorksheet("Resumen pedagógico", { views: [{ showGridLines: false }] });
     styleTitle(summary, "MISIÓN EMPRENDE · REPORTE DIAGNÓSTICO", "Resumen ejecutivo para la toma de decisiones pedagógicas", "H");
+    summary.addImage(logoId, { tl: { col: 6.35, row: 0.12 }, ext: { width: 132, height: 57 } });
     summary.columns = [{ width: 23 }, { width: 16 }, { width: 16 }, { width: 16 }, { width: 3 }, { width: 24 }, { width: 15 }, { width: 18 }];
     summary.addRow([]);
     summary.addRow(["Fecha de generación", reportDate, "Curso", gradeLabel, "", "Paralelo", parallelLabel]);
@@ -223,6 +227,7 @@ async function downloadExcelReport() {
 
     const results = workbook.addWorksheet("Resultados individuales", { views: [{ state: "frozen", ySplit: 4, xSplit: 1, showGridLines: false }] });
     styleTitle(results, "RESULTADOS INDIVIDUALES", "Evaluación diagnóstica · Los puntos y premios de juego no alteran el resultado sobre 10", "N");
+    results.addImage(logoId, { tl: { col: 12.2, row: 0.12 }, ext: { width: 132, height: 57 } });
     results.columns = [
       { width: 26 }, { width: 10 }, { width: 10 }, { width: 14 }, { width: 12 }, { width: 23 }, { width: 38 },
       { width: 15 }, { width: 12 }, { width: 14 }, { width: 34 }, { width: 30 }, { width: 21 }, { width: 18 }
@@ -250,6 +255,7 @@ async function downloadExcelReport() {
 
     const rubric = workbook.addWorksheet("Rúbrica diagnóstica", { views: [{ state: "frozen", ySplit: 7, showGridLines: false }] });
     styleTitle(rubric, "RÚBRICA DIAGNÓSTICA · EMPRENDIMIENTO", "Instrumento para interpretar conocimientos previos de 4.º a 7.º de EGB", "D");
+    rubric.addImage(logoId, { tl: { col: 2.95, row: 0.12 }, ext: { width: 132, height: 57 } });
     rubric.columns = [{ width: 17 }, { width: 24 }, { width: 58 }, { width: 58 }];
     rubric.addRow([]);
     rubric.addRow(["Propósito", "Identificar conocimientos previos para planificar el acompañamiento; no corresponde a una calificación sumativa."]);
