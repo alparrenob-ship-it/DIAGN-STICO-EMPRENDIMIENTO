@@ -2,7 +2,8 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/11.10.0/fireba
 import { getAuth, GoogleAuthProvider, onAuthStateChanged, signInWithPopup, signOut } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js";
 import { collection, getDocs, getFirestore, orderBy, query } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
 import { firebaseConfig, isFirebaseConfigured, TEACHER_EMAIL } from "./firebase-config.js";
-import { EIGHT_ACADEMY_LOGO_DATA_URL } from "./eight-logo-data.js";
+import { EIGHT_ACADEMY_LOGO_DATA_URL, EIGHT_ACADEMY_TAGLINE_DATA_URL } from "./eight-logo-data.js";
+import { INSTITUTIONAL_TEMPLATE_BASE64 } from "./institutional-template-data.js";
 
 const $ = selector => document.querySelector(selector);
 let auth;
@@ -189,12 +190,15 @@ async function downloadExcelReport() {
   button.textContent = "Preparando Excel…";
   try {
     const workbook = new ExcelJS.Workbook();
+    const templateBytes = Uint8Array.from(atob(INSTITUTIONAL_TEMPLATE_BASE64), character => character.charCodeAt(0));
+    await workbook.xlsx.load(templateBytes.buffer);
     workbook.creator = "Misión Emprende · Profe Anita";
     workbook.subject = "Evaluación diagnóstica de Emprendimiento";
     workbook.title = "Reporte diagnóstico 4.º a 7.º de EGB";
     workbook.company = "Eight Academy";
     workbook.created = new Date();
     const logoId = workbook.addImage({ base64: EIGHT_ACADEMY_LOGO_DATA_URL, extension: "png" });
+    const taglineId = workbook.addImage({ base64: EIGHT_ACADEMY_TAGLINE_DATA_URL, extension: "png" });
 
     const reportDate = new Intl.DateTimeFormat("es-EC", { dateStyle: "long", timeStyle: "short" }).format(new Date());
     const total = filteredResults.length;
@@ -204,98 +208,78 @@ async function downloadExcelReport() {
     const parallelLabel = $("#parallelFilter").selectedOptions[0].textContent;
     const performanceLabel = $("#performanceFilter").selectedOptions[0].textContent;
 
-    const summary = workbook.addWorksheet("Resumen pedagógico", { views: [{ showGridLines: false }] });
-    styleTitle(summary, "EMPRENDIMIENTO", "Resumen pedagógico para la toma de decisiones", "H");
-    summary.addImage(logoId, { tl: { col: 0.1, row: 0.08 }, ext: { width: 224, height: 60 } });
-    summary.columns = [{ width: 23 }, { width: 17 }, { width: 18 }, { width: 18 }, { width: 19 }, { width: 26 }, { width: 18 }, { width: 24 }];
-
-    styleSectionBand(summary, 3, "1. INFORMACIÓN", "H");
-    summary.addRow(["Docente:", "Lcda. Anita Parreño", "Área:", "Emprendimiento", "Materia:", "Emprendimiento Innovador", "Fecha:", reportDate]);
-    summary.addRow(["Unidad:", "Evaluación diagnóstica", "Tema:", "Saberes previos por niveles", "Pilar:", "Emprendimiento", "Curso:", gradeLabel]);
-    summary.addRow(["Paralelo:", parallelLabel, "Filtro de desempeño:", performanceLabel, "Participantes:", total, "Promedio /10:", Number(average.toFixed(1))]);
-    summary.getRows(4, 3).forEach(row => row.eachCell((cell, column) => {
-      cell.font = { name: "Arial", size: 9, bold: column % 2 === 1, color: { argb: excelColors.ink } };
-      cell.alignment = { vertical: "middle", wrapText: true };
-      cell.border = { bottom: { style: "thin", color: { argb: excelColors.line } } };
-    }));
-
-    styleSectionBand(summary, 7, "2. OBJETIVO DE LA EVALUACIÓN DIAGNÓSTICA", "H");
-    summary.mergeCells("A8:H8");
+    const summary = workbook.worksheets[0];
+    summary.name = "Resumen pedagógico";
+    summary.views = [{ showGridLines: false }];
+    summary.getCell("B4").value = "Lcda. Anita Parreño";
+    summary.getCell("F4").value = "Emprendimiento";
+    summary.getCell("J4").value = "Emprendimiento Innovador";
+    summary.getCell("B5").value = "Evaluación diagnóstica";
+    summary.getCell("F5").value = "Saberes previos por niveles";
+    summary.getCell("J5").value = "Emprendimiento";
+    summary.getCell("B6").value = gradeLabel;
+    summary.getCell("F6").value = "Diagnóstico inicial";
+    summary.getCell("J6").value = reportDate;
     summary.getCell("A8").value = "Identificar conocimientos previos y habilidades de aplicación en emprendimiento para planificar el acompañamiento pedagógico de 4.º a 7.º de EGB mediante una experiencia gamificada.";
-    summary.getCell("A8").alignment = { vertical: "middle", wrapText: true };
-    summary.getCell("A8").font = { name: "Arial", size: 9, color: { argb: excelColors.ink } };
-    summary.getRow(8).height = 34;
 
-    styleSectionBand(summary, 9, "3. APLICACIÓN DE LA EVALUACIÓN DIAGNÓSTICA", "H");
-    summary.addRow(["Curso", "Paralelo", "Participantes registrados", "Promedio /10", "Nivel predominante", "Observaciones"]);
-    summary.mergeCells("F10:H10");
-    styleHeader(summary.getRow(10));
     const applicationGroups = [...new Map(filteredResults.map(item => [`${item.grade}|${item.parallel || "—"}`, { grade: Number(item.grade), parallel: item.parallel || "—" }])).values()]
       .sort((a, b) => a.grade - b.grade || a.parallel.localeCompare(b.parallel));
-    (applicationGroups.length ? applicationGroups : [{ grade: null, parallel: "—" }]).forEach(groupInfo => {
+    for (let rowNumber = 11; rowNumber <= 24; rowNumber += 1) {
+      ["A", "C", "E", "G", "I", "K"].forEach(column => { summary.getCell(`${column}${rowNumber}`).value = ""; });
+    }
+    (applicationGroups.length ? applicationGroups : [{ grade: null, parallel: "—" }]).slice(0, 14).forEach((groupInfo, index) => {
       const group = groupInfo.grade === null ? [] : filteredResults.filter(item => Number(item.grade) === groupInfo.grade && (item.parallel || "—") === groupInfo.parallel);
       const groupAverage = group.length ? group.reduce((sum, item) => sum + Number(item.correct || 0), 0) / group.length : 0;
       const level = groupAverage >= 9 ? "Dominio destacado" : groupAverage >= 7 ? "Logro esperado" : groupAverage >= 4 ? "En desarrollo" : "Bases por construir";
-      const row = summary.addRow([groupInfo.grade ? `${groupInfo.grade}.º EGB` : "Sin datos", groupInfo.parallel, group.length, Number(groupAverage.toFixed(1)), group.length ? level : "Sin datos", group.length ? "Resultados registrados en la plataforma." : "No existen registros para los filtros seleccionados."]);
-      summary.mergeCells(`F${row.number}:H${row.number}`);
-      row.getCell(5).fill = { type: "pattern", pattern: "solid", fgColor: { argb: performanceFill(level) } };
-      row.height = 28;
+      const rowNumber = 11 + index;
+      summary.getCell(`A${rowNumber}`).value = groupInfo.grade ? `${groupInfo.grade}.º` : "Sin datos";
+      summary.getCell(`C${rowNumber}`).value = groupInfo.parallel;
+      summary.getCell(`E${rowNumber}`).value = "";
+      summary.getCell(`G${rowNumber}`).value = group.length;
+      summary.getCell(`I${rowNumber}`).value = "";
+      summary.getCell(`K${rowNumber}`).value = group.length ? `Promedio: ${groupAverage.toFixed(1)}/10 · ${level}` : "Sin registros";
     });
-
-    let nextRow = summary.lastRow.number + 1;
-    styleSectionBand(summary, nextRow, "4. COMPETENCIAS OBSERVADAS Y PLAN DE MEJORA", "H");
-    const bandHeader = summary.addRow(["Nivel diagnóstico", "Cantidad", "Porcentaje", "Recomendación", "Plan de mejora"]);
-    summary.mergeCells(`D${bandHeader.number}:E${bandHeader.number}`);
-    summary.mergeCells(`F${bandHeader.number}:H${bandHeader.number}`);
-    styleHeader(bandHeader);
-    const bands = [
-      ["Dominio destacado", "Proponer profundización y liderazgo.", "Retos de creación, mentoría entre pares y proyectos abiertos."],
-      ["Logro esperado", "Consolidar conceptos puntuales.", "Práctica guiada, validación y transferencia a casos nuevos."],
-      ["En desarrollo", "Reforzar la aplicación de conceptos.", "Modelado, ejemplos concretos y prototipos acompañados."],
-      ["Bases por construir", "Fortalecer vocabulario y experiencias iniciales.", "Secuencias breves, material visual y acompañamiento cercano."]
+    const scoreBands = [
+      { row: 29, count: filteredResults.filter(item => Number(item.correct || 0) >= 8).length, recommendation: "Mantener retos de profundización y liderazgo.", plan: "Proyectos abiertos, mentoría entre pares y aplicación en contextos nuevos." },
+      { row: 30, count: filteredResults.filter(item => Number(item.correct || 0) >= 5 && Number(item.correct || 0) <= 7).length, recommendation: "Consolidar los conceptos que presentan dificultad.", plan: "Práctica guiada, ejemplos y retroalimentación focalizada." },
+      { row: 31, count: filteredResults.filter(item => Number(item.correct || 0) <= 4).length, recommendation: "Fortalecer vocabulario y conocimientos esenciales.", plan: "Experiencias concretas, apoyos visuales y acompañamiento cercano." }
     ];
-    bands.forEach(([level, recommendation, plan]) => {
-      const count = filteredResults.filter(item => item.performance === level).length;
-      const row = summary.addRow([level, count, total ? count / total : 0, recommendation, "", plan]);
-      summary.mergeCells(`D${row.number}:E${row.number}`);
-      summary.mergeCells(`F${row.number}:H${row.number}`);
-      row.getCell(1).fill = { type: "pattern", pattern: "solid", fgColor: { argb: performanceFill(level) } };
-      row.getCell(3).numFmt = "0%";
-      row.height = 34;
+    summary.getCell("B26").value = gradeLabel;
+    summary.getCell("D26").value = parallelLabel;
+    summary.getCell("B27").value = "Emprendimiento Innovador";
+    scoreBands.forEach(band => {
+      summary.getCell(`D${band.row}`).value = band.count;
+      summary.getCell(`E${band.row}`).value = total ? band.count / total : 0;
+      summary.getCell(`E${band.row}`).numFmt = "0%";
+      summary.getCell(`F${band.row}`).value = band.recommendation;
+      summary.getCell(`I${band.row}`).value = band.plan;
     });
+    summary.getCell("D32").value = total;
+    summary.getCell("E32").value = total ? 1 : 0;
+    summary.getCell("E32").numFmt = "0%";
 
-    nextRow = summary.lastRow.number + 1;
-    styleSectionBand(summary, nextRow, "5. LOGRO POR HABILIDAD", "H");
-    const skillHeader = summary.addRow(["Habilidad", "Aciertos", "Evidencias", "Logro"]);
-    summary.mergeCells(`D${skillHeader.number}:H${skillHeader.number}`);
-    styleHeader(skillHeader);
-    skills.forEach(skill => {
-      const source = filteredResults.flatMap(item => item.skills || []).filter(item => item.category === skill.name);
-      const correct = source.reduce((sum, item) => sum + Number(item.correct || 0), 0);
-      const evidence = source.reduce((sum, item) => sum + Number(item.total || 0), 0);
-      const row = summary.addRow([skill.name, correct, evidence, skill.percentage / 100]);
-      summary.mergeCells(`D${row.number}:H${row.number}`);
-      row.getCell(4).numFmt = "0%";
+    const challengeBands = [
+      { row: 37, count: filteredResults.filter(item => Number(item.keys || 0) >= 4).length, label: "ESPERADO (Resuelve los retos de aplicación) 4-5" },
+      { row: 38, count: filteredResults.filter(item => Number(item.keys || 0) >= 2 && Number(item.keys || 0) <= 3).length, label: "EN PROCESO (Resuelve algunos retos con apoyo) 2-3" },
+      { row: 39, count: filteredResults.filter(item => Number(item.keys || 0) <= 1).length, label: "REQUIERE APOYO (Necesita guía en los retos) 0-1" }
+    ];
+    summary.getCell("B34").value = gradeLabel;
+    summary.getCell("D34").value = parallelLabel;
+    summary.getCell("B35").value = "Emprendimiento Innovador · Retos de aplicación";
+    challengeBands.forEach(band => {
+      summary.getCell(`A${band.row}`).value = band.label;
+      summary.getCell(`D${band.row}`).value = band.count;
+      summary.getCell(`E${band.row}`).value = total ? band.count / total : 0;
+      summary.getCell(`E${band.row}`).numFmt = "0%";
+      summary.getCell(`F${band.row}`).value = band.row === 37 ? "Continuar con desafíos autónomos." : band.row === 38 ? "Modelar estrategias de resolución." : "Acompañar cada reto paso a paso.";
+      summary.getCell(`I${band.row}`).value = band.row === 37 ? "Transferir aprendizajes a proyectos nuevos." : band.row === 38 ? "Repetir retos con ejemplos cercanos." : "Usar apoyos visuales y trabajo cooperativo.";
     });
-
-    nextRow = summary.lastRow.number + 1;
-    styleSectionBand(summary, nextRow, "7. OBSERVACIONES", "H");
-    const observationRow = summary.addRow(["El resultado corresponde a una evaluación diagnóstica. Los puntos, insignias, rapidez, llaves, cupón de dulce y Bono +1 son motivadores de gamificación y no alteran el resultado sobre 10."]);
-    summary.mergeCells(`A${observationRow.number}:H${observationRow.number}`);
-    observationRow.height = 38;
-    observationRow.getCell(1).alignment = { vertical: "middle", wrapText: true };
-    const signatureHeader = summary.addRow(["ELABORADO", "", "REVISADO", "", "", "APROBADO"]);
-    summary.mergeCells(`A${signatureHeader.number}:B${signatureHeader.number}`);
-    summary.mergeCells(`C${signatureHeader.number}:E${signatureHeader.number}`);
-    summary.mergeCells(`F${signatureHeader.number}:H${signatureHeader.number}`);
-    styleHeader(signatureHeader);
-    const signatureRow = summary.addRow(["Lcda. Anita Parreño\nFecha: " + reportDate, "", "Nombre y firma: ____________________", "", "", "Nombre y firma: ____________________"]);
-    summary.mergeCells(`A${signatureRow.number}:B${signatureRow.number}`);
-    summary.mergeCells(`C${signatureRow.number}:E${signatureRow.number}`);
-    summary.mergeCells(`F${signatureRow.number}:H${signatureRow.number}`);
-    signatureRow.height = 48;
-    signatureRow.eachCell(cell => { cell.alignment = { vertical: "middle", horizontal: "center", wrapText: true }; cell.font = { name: "Arial", size: 9 }; });
-    summary.views = [{ state: "frozen", ySplit: 2, showGridLines: false }];
+    summary.getCell("D40").value = total;
+    summary.getCell("E40").value = total ? 1 : 0;
+    summary.getCell("E40").numFmt = "0%";
+    summary.getCell("A43").value = `Promedio general: ${average.toFixed(1)}/10. Prioridad de refuerzo: ${skills[0]?.name || "Sin datos"}. El puntaje de juego, insignias, llaves y premios no modifican el resultado diagnóstico.`;
+    summary.getCell("C49").value = "Lcda. Anita Parreño";
+    summary.getCell("C50").value = reportDate;
 
     const results = workbook.addWorksheet("Resultados individuales", { views: [{ state: "frozen", ySplit: 4, xSplit: 1, showGridLines: false }] });
     styleTitle(results, "RESULTADOS INDIVIDUALES", "Evaluación diagnóstica · Los puntos y premios de juego no alteran el resultado sobre 10", "N");
