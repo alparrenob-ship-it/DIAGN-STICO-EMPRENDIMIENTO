@@ -83,6 +83,38 @@ const MISSION_BANK = {
   ]
 };
 
+// Distribuye las claves correctas entre A, B, C y D sin alterar el contenido
+// pedagógico. Los retos con tres opciones usan el mismo criterio con A, B y C.
+const ANSWER_ROTATIONS = {
+  4: { questions: [1, 3, 2, 0, 1], scenario: [2, 1, 0] },
+  5: { questions: [2, 0, 3, 1, 2], scenario: [1, 0, 2] },
+  6: { questions: [3, 2, 0, 1, 3], scenario: [0, 2, 1] },
+  7: { questions: [0, 1, 3, 2, 0], scenario: [2, 0, 1] }
+};
+
+function rotateAnswerSet(target, shift) {
+  const normalizedShift = shift % target.options.length;
+  if (!normalizedShift) return;
+  target.options = [
+    ...target.options.slice(-normalizedShift),
+    ...target.options.slice(0, -normalizedShift)
+  ];
+  target.correct = (target.correct + normalizedShift) % target.options.length;
+}
+
+Object.entries(MISSION_BANK).forEach(([grade, missions]) => {
+  let questionIndex = 0;
+  missions.forEach(mission => {
+    if (mission.type === "question") {
+      rotateAnswerSet(mission, ANSWER_ROTATIONS[grade].questions[questionIndex]);
+      questionIndex += 1;
+    }
+    if (mission.type === "scenario") {
+      mission.steps.forEach((step, index) => rotateAnswerSet(step, ANSWER_ROTATIONS[grade].scenario[index]));
+    }
+  });
+});
+
 const state = { student: "", grade: 4, parallel: "", index: 0, points: 0, keys: 0, streak: 0, maxStreak: 0, correct: 0, mistakes: 0, answers: [], sound: true, locked: false, challenge: null, bonusUnlocked: false, sweetUnlocked: false, resultId: null };
 const $ = selector => document.querySelector(selector);
 const screens = { start: $("#startScreen"), game: $("#gameScreen"), result: $("#resultScreen") };
