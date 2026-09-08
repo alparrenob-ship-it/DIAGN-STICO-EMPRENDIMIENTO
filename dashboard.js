@@ -2,8 +2,8 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/11.10.0/fireba
 import { getAuth, GoogleAuthProvider, onAuthStateChanged, signInWithPopup, signOut } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js";
 import { collection, getDocs, getFirestore, orderBy, query } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
 import { firebaseConfig, isFirebaseConfigured, TEACHER_EMAIL } from "./firebase-config.js";
-import { EIGHT_ACADEMY_LOGO_DATA_URL, EIGHT_ACADEMY_TAGLINE_DATA_URL } from "./eight-logo-data.js";
-import { INSTITUTIONAL_TEMPLATE_BASE64 } from "./institutional-template-data.js";
+import { EIGHT_ACADEMY_LOGO_DATA_URL, EIGHT_ACADEMY_TAGLINE_DATA_URL } from "./eight-logo-data.js?v=20260908-2";
+import { INSTITUTIONAL_TEMPLATE_BASE64 } from "./institutional-template-data.js?v=20260908-2";
 
 const $ = selector => document.querySelector(selector);
 let auth;
