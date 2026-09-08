@@ -1,4 +1,5 @@
 import { saveBonusReflection, saveDiagnosticResult } from "./firebase-service.js";
+import { EVALUATION_HEADER_DATA_URL } from "./evaluation-header-data.js";
 
 const LEVELS = {
   4: { code: "DISCOVER", label: "Descubrir", avatar: "🔎", difficulty: "Entrepreneur Mindset", color: "#25c2d6", reward: "Moneda Semilla +1", badge: ["🔎", "Detector de oportunidades", "Reconoce necesidades y propone ideas"] },
@@ -118,6 +119,7 @@ Object.entries(MISSION_BANK).forEach(([grade, missions]) => {
 const state = { student: "", grade: 4, parallel: "", index: 0, points: 0, keys: 0, streak: 0, maxStreak: 0, correct: 0, mistakes: 0, answers: [], sound: true, locked: false, challenge: null, bonusUnlocked: false, sweetUnlocked: false, resultId: null };
 const $ = selector => document.querySelector(selector);
 const screens = { start: $("#startScreen"), game: $("#gameScreen"), result: $("#resultScreen") };
+$("#evaluationHeaderImage").src = EVALUATION_HEADER_DATA_URL;
 
 function showScreen(name) {
   Object.entries(screens).forEach(([key, screen]) => screen.classList.toggle("is-hidden", key !== name));
