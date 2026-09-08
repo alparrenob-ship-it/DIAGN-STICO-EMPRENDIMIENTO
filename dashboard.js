@@ -127,32 +127,47 @@ async function login() {
 }
 
 const excelColors = {
-  navy: "111B3F", purple: "5B3FE4", cyan: "19BFD3", white: "FFFFFF",
-  ink: "172033", soft: "EEF2FF", line: "D9E1F2", green: "DDF5E8",
-  yellow: "FFF0BF", orange: "FFE1C7", red: "FFD9DD", gray: "667085"
+  navy: "1F1F1F", purple: "D9D9D9", cyan: "7F7F7F", white: "FFFFFF",
+  ink: "111111", soft: "F2F2F2", line: "595959", green: "93C47D",
+  blue: "C9DAF8", yellow: "FFF200", orange: "F6B26B", red: "E06666", gray: "666666"
 };
 
 function styleTitle(sheet, title, subtitle, endColumn) {
   sheet.mergeCells(`A1:${endColumn}1`);
-  sheet.getCell("A1").value = title;
-  sheet.getCell("A1").font = { name: "Aptos Display", size: 20, bold: true, color: { argb: excelColors.white } };
-  sheet.getCell("A1").fill = { type: "pattern", pattern: "solid", fgColor: { argb: excelColors.navy } };
-  sheet.getCell("A1").alignment = { vertical: "middle", horizontal: "left" };
-  sheet.getRow(1).height = 36;
+  sheet.getCell("A1").value = "Unidad Educativa Particular “Eight Academy”";
+  sheet.getCell("A1").font = { name: "Arial", size: 15, bold: true, italic: true, color: { argb: excelColors.ink } };
+  sheet.getCell("A1").alignment = { vertical: "middle", horizontal: "center" };
+  sheet.getCell("A1").border = { bottom: { style: "thin", color: { argb: excelColors.line } } };
+  sheet.getRow(1).height = 34;
   sheet.mergeCells(`A2:${endColumn}2`);
-  sheet.getCell("A2").value = subtitle;
-  sheet.getCell("A2").font = { name: "Aptos", size: 11, italic: true, color: { argb: excelColors.gray } };
-  sheet.getRow(2).height = 24;
+  sheet.getCell("A2").value = `INFORME DE EVALUACIÓN DIAGNÓSTICA · ${title}`;
+  sheet.getCell("A2").font = { name: "Arial", size: 10, bold: true, color: { argb: excelColors.ink } };
+  sheet.getCell("A2").fill = { type: "pattern", pattern: "solid", fgColor: { argb: excelColors.purple } };
+  sheet.getCell("A2").alignment = { vertical: "middle", horizontal: "center", wrapText: true };
+  sheet.getCell("A2").border = { top: { style: "thin", color: { argb: excelColors.line } }, bottom: { style: "thin", color: { argb: excelColors.line } } };
+  sheet.getRow(2).height = 25;
+  sheet.headerFooter.oddHeader = `&C${subtitle}`;
 }
 
 function styleHeader(row) {
   row.height = 30;
   row.eachCell(cell => {
-    cell.font = { name: "Aptos", size: 10, bold: true, color: { argb: excelColors.white } };
+    cell.font = { name: "Arial", size: 9, bold: true, color: { argb: excelColors.ink } };
     cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: excelColors.purple } };
     cell.alignment = { vertical: "middle", horizontal: "center", wrapText: true };
-    cell.border = { bottom: { style: "medium", color: { argb: excelColors.cyan } } };
+    cell.border = { top: { style: "thin", color: { argb: excelColors.line } }, left: { style: "thin", color: { argb: excelColors.line } }, bottom: { style: "thin", color: { argb: excelColors.line } }, right: { style: "thin", color: { argb: excelColors.line } } };
   });
+}
+
+function styleSectionBand(sheet, rowNumber, title, endColumn) {
+  sheet.mergeCells(`A${rowNumber}:${endColumn}${rowNumber}`);
+  const cell = sheet.getCell(`A${rowNumber}`);
+  cell.value = title;
+  cell.font = { name: "Arial", size: 10, bold: true, color: { argb: excelColors.ink } };
+  cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: excelColors.purple } };
+  cell.alignment = { vertical: "middle", horizontal: "left" };
+  cell.border = { top: { style: "thin", color: { argb: excelColors.line } }, bottom: { style: "thin", color: { argb: excelColors.line } } };
+  sheet.getRow(rowNumber).height = 22;
 }
 
 function performanceFill(performance) {
@@ -190,38 +205,96 @@ async function downloadExcelReport() {
     const performanceLabel = $("#performanceFilter").selectedOptions[0].textContent;
 
     const summary = workbook.addWorksheet("Resumen pedagógico", { views: [{ showGridLines: false }] });
-    styleTitle(summary, "MISIÓN EMPRENDE · REPORTE DIAGNÓSTICO", "Resumen ejecutivo para la toma de decisiones pedagógicas", "H");
-    summary.addImage(logoId, { tl: { col: 6.35, row: 0.12 }, ext: { width: 132, height: 57 } });
-    summary.columns = [{ width: 23 }, { width: 16 }, { width: 16 }, { width: 16 }, { width: 3 }, { width: 24 }, { width: 15 }, { width: 18 }];
-    summary.addRow([]);
-    summary.addRow(["Fecha de generación", reportDate, "Curso", gradeLabel, "", "Paralelo", parallelLabel]);
-    summary.addRow(["Filtro de desempeño", performanceLabel, "Docente autorizada", TEACHER_EMAIL]);
-    summary.getRows(4, 2).forEach(row => row.eachCell(cell => { cell.font = { name: "Aptos", size: 10, color: { argb: excelColors.ink } }; cell.alignment = { vertical: "middle", wrapText: true }; }));
-    ["A4", "C4", "F4", "A5", "C5"].forEach(ref => { summary.getCell(ref).font = { name: "Aptos", size: 10, bold: true, color: { argb: excelColors.navy } }; });
-    summary.addRow([]);
-    const metricRow = summary.addRow(["PARTICIPANTES", total, "PROMEDIO / 10", Number(average.toFixed(1)), "", "PRIORIDAD DE REFUERZO", skills[0]?.name || "Sin datos"]);
-    metricRow.height = 34;
-    metricRow.eachCell(cell => { cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: excelColors.soft } }; cell.font = { name: "Aptos", size: 11, bold: true, color: { argb: excelColors.navy } }; cell.alignment = { vertical: "middle", wrapText: true }; });
-    summary.addRow([]);
-    summary.addRow(["PROMEDIO POR CURSO", "Participantes", "Promedio", "Nivel predominante"]);
-    styleHeader(summary.getRow(9));
-    [4, 5, 6, 7].forEach(grade => {
-      const group = filteredResults.filter(item => Number(item.grade) === grade);
-      const gradeAverage = group.length ? group.reduce((sum, item) => sum + Number(item.correct || 0), 0) / group.length : 0;
-      const level = gradeAverage >= 9 ? "Dominio destacado" : gradeAverage >= 7 ? "Logro esperado" : gradeAverage >= 4 ? "En desarrollo" : "Bases por construir";
-      const row = summary.addRow([`${grade}.º EGB`, group.length, Number(gradeAverage.toFixed(1)), group.length ? level : "Sin datos"]);
-      row.getCell(4).fill = { type: "pattern", pattern: "solid", fgColor: { argb: performanceFill(level) } };
+    styleTitle(summary, "EMPRENDIMIENTO", "Resumen pedagógico para la toma de decisiones", "H");
+    summary.addImage(logoId, { tl: { col: 6.55, row: 0.05 }, ext: { width: 88, height: 39 } });
+    summary.columns = [{ width: 23 }, { width: 17 }, { width: 18 }, { width: 18 }, { width: 19 }, { width: 26 }, { width: 18 }, { width: 24 }];
+
+    styleSectionBand(summary, 3, "1. INFORMACIÓN", "H");
+    summary.addRow(["Docente:", "Lcda. Anita Parreño", "Área:", "Emprendimiento", "Materia:", "Emprendimiento Innovador", "Fecha:", reportDate]);
+    summary.addRow(["Unidad:", "Evaluación diagnóstica", "Tema:", "Saberes previos por niveles", "Pilar:", "Emprendimiento", "Curso:", gradeLabel]);
+    summary.addRow(["Paralelo:", parallelLabel, "Filtro de desempeño:", performanceLabel, "Participantes:", total, "Promedio /10:", Number(average.toFixed(1))]);
+    summary.getRows(4, 3).forEach(row => row.eachCell((cell, column) => {
+      cell.font = { name: "Arial", size: 9, bold: column % 2 === 1, color: { argb: excelColors.ink } };
+      cell.alignment = { vertical: "middle", wrapText: true };
+      cell.border = { bottom: { style: "thin", color: { argb: excelColors.line } } };
+    }));
+
+    styleSectionBand(summary, 7, "2. OBJETIVO DE LA EVALUACIÓN DIAGNÓSTICA", "H");
+    summary.mergeCells("A8:H8");
+    summary.getCell("A8").value = "Identificar conocimientos previos y habilidades de aplicación en emprendimiento para planificar el acompañamiento pedagógico de 4.º a 7.º de EGB mediante una experiencia gamificada.";
+    summary.getCell("A8").alignment = { vertical: "middle", wrapText: true };
+    summary.getCell("A8").font = { name: "Arial", size: 9, color: { argb: excelColors.ink } };
+    summary.getRow(8).height = 34;
+
+    styleSectionBand(summary, 9, "3. APLICACIÓN DE LA EVALUACIÓN DIAGNÓSTICA", "H");
+    summary.addRow(["Curso", "Paralelo", "Participantes registrados", "Promedio /10", "Nivel predominante", "Observaciones"]);
+    summary.mergeCells("F10:H10");
+    styleHeader(summary.getRow(10));
+    const applicationGroups = [...new Map(filteredResults.map(item => [`${item.grade}|${item.parallel || "—"}`, { grade: Number(item.grade), parallel: item.parallel || "—" }])).values()]
+      .sort((a, b) => a.grade - b.grade || a.parallel.localeCompare(b.parallel));
+    (applicationGroups.length ? applicationGroups : [{ grade: null, parallel: "—" }]).forEach(groupInfo => {
+      const group = groupInfo.grade === null ? [] : filteredResults.filter(item => Number(item.grade) === groupInfo.grade && (item.parallel || "—") === groupInfo.parallel);
+      const groupAverage = group.length ? group.reduce((sum, item) => sum + Number(item.correct || 0), 0) / group.length : 0;
+      const level = groupAverage >= 9 ? "Dominio destacado" : groupAverage >= 7 ? "Logro esperado" : groupAverage >= 4 ? "En desarrollo" : "Bases por construir";
+      const row = summary.addRow([groupInfo.grade ? `${groupInfo.grade}.º EGB` : "Sin datos", groupInfo.parallel, group.length, Number(groupAverage.toFixed(1)), group.length ? level : "Sin datos", group.length ? "Resultados registrados en la plataforma." : "No existen registros para los filtros seleccionados."]);
+      summary.mergeCells(`F${row.number}:H${row.number}`);
+      row.getCell(5).fill = { type: "pattern", pattern: "solid", fgColor: { argb: performanceFill(level) } };
+      row.height = 28;
     });
-    summary.addRow([]);
-    summary.addRow(["LOGRO POR HABILIDAD", "Aciertos", "Evidencias", "Logro"]);
-    styleHeader(summary.getRow(15));
+
+    let nextRow = summary.lastRow.number + 1;
+    styleSectionBand(summary, nextRow, "4. COMPETENCIAS OBSERVADAS Y PLAN DE MEJORA", "H");
+    const bandHeader = summary.addRow(["Nivel diagnóstico", "Cantidad", "Porcentaje", "Recomendación", "Plan de mejora"]);
+    summary.mergeCells(`D${bandHeader.number}:E${bandHeader.number}`);
+    summary.mergeCells(`F${bandHeader.number}:H${bandHeader.number}`);
+    styleHeader(bandHeader);
+    const bands = [
+      ["Dominio destacado", "Proponer profundización y liderazgo.", "Retos de creación, mentoría entre pares y proyectos abiertos."],
+      ["Logro esperado", "Consolidar conceptos puntuales.", "Práctica guiada, validación y transferencia a casos nuevos."],
+      ["En desarrollo", "Reforzar la aplicación de conceptos.", "Modelado, ejemplos concretos y prototipos acompañados."],
+      ["Bases por construir", "Fortalecer vocabulario y experiencias iniciales.", "Secuencias breves, material visual y acompañamiento cercano."]
+    ];
+    bands.forEach(([level, recommendation, plan]) => {
+      const count = filteredResults.filter(item => item.performance === level).length;
+      const row = summary.addRow([level, count, total ? count / total : 0, recommendation, "", plan]);
+      summary.mergeCells(`D${row.number}:E${row.number}`);
+      summary.mergeCells(`F${row.number}:H${row.number}`);
+      row.getCell(1).fill = { type: "pattern", pattern: "solid", fgColor: { argb: performanceFill(level) } };
+      row.getCell(3).numFmt = "0%";
+      row.height = 34;
+    });
+
+    nextRow = summary.lastRow.number + 1;
+    styleSectionBand(summary, nextRow, "5. LOGRO POR HABILIDAD", "H");
+    const skillHeader = summary.addRow(["Habilidad", "Aciertos", "Evidencias", "Logro"]);
+    summary.mergeCells(`D${skillHeader.number}:H${skillHeader.number}`);
+    styleHeader(skillHeader);
     skills.forEach(skill => {
       const source = filteredResults.flatMap(item => item.skills || []).filter(item => item.category === skill.name);
       const correct = source.reduce((sum, item) => sum + Number(item.correct || 0), 0);
       const evidence = source.reduce((sum, item) => sum + Number(item.total || 0), 0);
       const row = summary.addRow([skill.name, correct, evidence, skill.percentage / 100]);
+      summary.mergeCells(`D${row.number}:H${row.number}`);
       row.getCell(4).numFmt = "0%";
     });
+
+    nextRow = summary.lastRow.number + 1;
+    styleSectionBand(summary, nextRow, "7. OBSERVACIONES", "H");
+    const observationRow = summary.addRow(["El resultado corresponde a una evaluación diagnóstica. Los puntos, insignias, rapidez, llaves, cupón de dulce y Bono +1 son motivadores de gamificación y no alteran el resultado sobre 10."]);
+    summary.mergeCells(`A${observationRow.number}:H${observationRow.number}`);
+    observationRow.height = 38;
+    observationRow.getCell(1).alignment = { vertical: "middle", wrapText: true };
+    const signatureHeader = summary.addRow(["ELABORADO", "", "REVISADO", "", "", "APROBADO"]);
+    summary.mergeCells(`A${signatureHeader.number}:B${signatureHeader.number}`);
+    summary.mergeCells(`C${signatureHeader.number}:E${signatureHeader.number}`);
+    summary.mergeCells(`F${signatureHeader.number}:H${signatureHeader.number}`);
+    styleHeader(signatureHeader);
+    const signatureRow = summary.addRow(["Lcda. Anita Parreño\nFecha: " + reportDate, "", "Nombre y firma: ____________________", "", "", "Nombre y firma: ____________________"]);
+    summary.mergeCells(`A${signatureRow.number}:B${signatureRow.number}`);
+    summary.mergeCells(`C${signatureRow.number}:E${signatureRow.number}`);
+    summary.mergeCells(`F${signatureRow.number}:H${signatureRow.number}`);
+    signatureRow.height = 48;
+    signatureRow.eachCell(cell => { cell.alignment = { vertical: "middle", horizontal: "center", wrapText: true }; cell.font = { name: "Arial", size: 9 }; });
     summary.views = [{ state: "frozen", ySplit: 2, showGridLines: false }];
 
     const results = workbook.addWorksheet("Resultados individuales", { views: [{ state: "frozen", ySplit: 4, xSplit: 1, showGridLines: false }] });
