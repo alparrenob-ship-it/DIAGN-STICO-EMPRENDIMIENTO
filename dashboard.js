@@ -2,8 +2,8 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/11.10.0/fireba
 import { getAuth, GoogleAuthProvider, onAuthStateChanged, signInWithPopup, signOut } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js";
 import { collection, getDocs, getFirestore, orderBy, query } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
 import { firebaseConfig, isFirebaseConfigured, TEACHER_EMAIL } from "./firebase-config.js";
-import { EIGHT_ACADEMY_LOGO_DATA_URL, EIGHT_ACADEMY_TAGLINE_DATA_URL } from "./eight-logo-data.js?v=20260908-2";
-import { INSTITUTIONAL_TEMPLATE_BASE64 } from "./institutional-template-data.js?v=20260908-2";
+import { EIGHT_ACADEMY_LOGO_DATA_URL, EIGHT_ACADEMY_TAGLINE_DATA_URL } from "./eight-logo-data.js?v=20260909-1";
+import { INSTITUTIONAL_TEMPLATE_BASE64 } from "./institutional-template-data.js?v=20260909-1";
 
 const $ = selector => document.querySelector(selector);
 let auth;
@@ -93,7 +93,7 @@ function renderTable() {
   $("#emptyState").classList.toggle("is-hidden", filteredResults.length > 0);
   filteredResults.forEach(result => {
     const row = document.createElement("tr");
-    const prizes = [result.bonusUnlocked ? "🎟️ +1" : "", result.sweetUnlocked ? "🍬 Dulce" : ""].filter(Boolean).join(" · ") || "Pendiente";
+    const prizes = [result.bonusUnlocked ? "🎟️ +1 prueba de unidad" : "", result.sweetUnlocked ? "🙋 +1 participación" : ""].filter(Boolean).join(" · ") || "Pendiente";
     row.innerHTML = `<td><strong></strong><small></small></td><td></td><td><strong>${Number(result.correct || 0)}/10</strong><small>${Number(result.keys || 0)}/5 retos</small></td><td><span class="performance-pill"></span></td><td>${Number(result.points || 0).toLocaleString("es-EC")}</td><td class="${result.bonusUnlocked || result.sweetUnlocked ? "bonus-yes" : ""}">${prizes}</td><td>${formatDate(result.createdAt)}</td>`;
     row.children[0].querySelector("strong").textContent = result.student || "Sin identificación";
     row.children[0].querySelector("small").textContent = (result.badges || []).join(" · ") || "Sin insignias";
@@ -189,7 +189,7 @@ async function downloadExcelReport() {
   button.disabled = true;
   button.textContent = "Preparando Excel…";
   try {
-    const workbook = new ExcelJS.Workbook();
+    const workbook = new window.ExcelJS.Workbook();
     const templateBytes = Uint8Array.from(atob(INSTITUTIONAL_TEMPLATE_BASE64), character => character.charCodeAt(0));
     await workbook.xlsx.load(templateBytes.buffer);
     workbook.creator = "Misión Emprende · Profe Anita";
@@ -289,7 +289,7 @@ async function downloadExcelReport() {
       { width: 15 }, { width: 12 }, { width: 14 }, { width: 34 }, { width: 30 }, { width: 21 }, { width: 18 }
     ];
     results.addRow([]);
-    const resultHeader = results.addRow(["Estudiante / código", "Curso", "Paralelo", "Nivel", "Resultado", "Nivel diagnóstico", "Detalle por habilidad", "Puntos de juego", "Bono +1", "Cupón dulce", "Reflexión", "Insignias", "Fecha", "ID de registro"]);
+    const resultHeader = results.addRow(["Estudiante / código", "Curso", "Paralelo", "Nivel", "Resultado", "Nivel diagnóstico", "Detalle por habilidad", "Puntos de juego", "Bono +1 prueba de unidad", "Participación +1", "Reflexión", "Insignias", "Fecha", "ID de registro"]);
     styleHeader(resultHeader);
     filteredResults.forEach((item, index) => {
       const date = item.createdAt?.toDate ? item.createdAt.toDate() : null;
@@ -318,7 +318,7 @@ async function downloadExcelReport() {
     rubric.mergeCells("B4:D4");
     rubric.addRow(["Estructura", "5 preguntas conceptuales (5 puntos) + 5 retos de aplicación (5 puntos) = 10 puntos diagnósticos."]);
     rubric.mergeCells("B5:D5");
-    rubric.addRow(["Importante", "Monedas, rapidez, rachas, llaves, cupón de dulce y Bono +1 son motivadores y no modifican el resultado diagnóstico."]);
+    rubric.addRow(["Importante", "Monedas, rapidez, rachas, llaves, +1 de participación y Bono +1 para la prueba de unidad son motivadores y no modifican el resultado diagnóstico."]);
     rubric.mergeCells("B6:D6");
     [4, 5, 6].forEach(rowNumber => { rubric.getRow(rowNumber).height = 34; rubric.getRow(rowNumber).eachCell(cell => { cell.alignment = { vertical: "middle", wrapText: true }; cell.font = { name: "Aptos", size: 10, color: { argb: excelColors.ink }, bold: cell.column === 1 }; }); });
     const rubricHeader = rubric.addRow(["Resultado", "Nivel diagnóstico", "Evidencia observada", "Decisión pedagógica sugerida"]);
@@ -353,14 +353,140 @@ async function downloadExcelReport() {
     const link = document.createElement("a");
     link.href = URL.createObjectURL(new Blob([buffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" }));
     link.download = `reporte-diagnostico-emprendimiento-${new Date().toISOString().slice(0, 10)}.xlsx`;
+    document.body.appendChild(link);
     link.click();
-    setTimeout(() => URL.revokeObjectURL(link.href), 1000);
+    link.remove();
+    setTimeout(() => URL.revokeObjectURL(link.href), 15000);
   } catch (error) {
     console.error("Error al generar Excel", error);
     alert("No fue posible generar el reporte Excel. Inténtalo nuevamente.");
   } finally {
     button.disabled = false;
     button.textContent = "📊 Descargar reporte Excel";
+  }
+}
+
+function addPdfHeader(doc, title, reportDate) {
+  doc.setFillColor(31, 31, 31);
+  doc.rect(0, 0, 297, 28, "F");
+  try { doc.addImage(EIGHT_ACADEMY_LOGO_DATA_URL, "PNG", 12, 5, 47, 13); } catch (error) { console.warn("No se pudo incorporar el logo en el PDF", error); }
+  doc.setTextColor(255, 255, 255);
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(14);
+  doc.text("UNIDAD EDUCATIVA PARTICULAR EIGHT ACADEMY", 148.5, 11, { align: "center" });
+  doc.setFontSize(10);
+  doc.text(title, 148.5, 18, { align: "center" });
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(8);
+  doc.text(reportDate, 285, 24, { align: "right" });
+}
+
+function addPdfFooter(doc, pageNumber) {
+  doc.setDrawColor(89, 89, 89);
+  doc.line(12, 198, 285, 198);
+  doc.setTextColor(90, 90, 90);
+  doc.setFontSize(7.5);
+  doc.text("Lcda. Anita Parreño · Evaluación diagnóstica de Emprendimiento · Documento confidencial", 12, 202);
+  doc.text(`Página ${pageNumber}`, 285, 202, { align: "right" });
+}
+
+function drawPdfCell(doc, text, x, y, width, height, options = {}) {
+  const { fill = [255, 255, 255], bold = false, align = "left", color = [17, 17, 17], fontSize = 7.5 } = options;
+  doc.setFillColor(...fill);
+  doc.setDrawColor(160, 160, 160);
+  doc.rect(x, y, width, height, "FD");
+  doc.setTextColor(...color);
+  doc.setFont("helvetica", bold ? "bold" : "normal");
+  doc.setFontSize(fontSize);
+  const lines = doc.splitTextToSize(String(text ?? ""), Math.max(width - 4, 2));
+  const textY = y + 4.5;
+  doc.text(lines.slice(0, Math.max(1, Math.floor((height - 3) / 3.4))), align === "center" ? x + width / 2 : x + 2, textY, { align });
+}
+
+async function downloadPdfReport() {
+  if (!window.jspdf?.jsPDF) {
+    alert("No se pudo cargar el generador de PDF. Recarga la página e inténtalo nuevamente.");
+    return;
+  }
+  const button = $("#pdfButton");
+  button.disabled = true;
+  button.textContent = "Preparando PDF…";
+  try {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({ orientation: "landscape", unit: "mm", format: "a4" });
+    const reportDate = new Intl.DateTimeFormat("es-EC", { dateStyle: "long", timeStyle: "short" }).format(new Date());
+    const total = filteredResults.length;
+    const average = total ? filteredResults.reduce((sum, item) => sum + Number(item.correct || 0), 0) / total : 0;
+    const skills = aggregateSkills(filteredResults);
+    let pageNumber = 1;
+    addPdfHeader(doc, "INFORME DE EVALUACIÓN DIAGNÓSTICA · EMPRENDIMIENTO", reportDate);
+
+    doc.setTextColor(17, 17, 17);
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(11);
+    doc.text("Resumen pedagógico", 12, 38);
+    const cards = [
+      ["Participantes", total], ["Promedio", `${average.toFixed(1)}/10`],
+      ["Por reforzar", skills[0]?.name || "Sin datos"], ["Filtros", `${$("#gradeFilter").selectedOptions[0].textContent} · ${$("#parallelFilter").selectedOptions[0].textContent}`]
+    ];
+    cards.forEach(([label, value], index) => {
+      const x = 12 + index * 68.5;
+      doc.setFillColor(242, 242, 242);
+      doc.roundedRect(x, 43, 64, 22, 2, 2, "F");
+      doc.setTextColor(90, 90, 90); doc.setFontSize(7.5); doc.setFont("helvetica", "normal"); doc.text(label, x + 4, 49);
+      doc.setTextColor(17, 17, 17); doc.setFontSize(index === 2 ? 9 : 13); doc.setFont("helvetica", "bold");
+      doc.text(doc.splitTextToSize(String(value), 56).slice(0, 2), x + 4, 57);
+    });
+
+    doc.setFontSize(10); doc.setFont("helvetica", "bold"); doc.text("Interpretación diagnóstica", 12, 75);
+    const rubricRows = [
+      ["9-10", "Dominio destacado", "Profundización, liderazgo y creación."],
+      ["7-8", "Logro esperado", "Consolidación mediante práctica y validación."],
+      ["4-6", "En desarrollo", "Modelado, equipos y prototipos guiados."],
+      ["0-3", "Bases por construir", "Experiencias concretas y acompañamiento cercano."]
+    ];
+    let y = 80;
+    [["Resultado", 28], ["Nivel diagnóstico", 58], ["Decisión pedagógica sugerida", 187]].reduce((x, [text, width]) => { drawPdfCell(doc, text, x, y, width, 9, { fill: [217, 217, 217], bold: true, align: "center" }); return x + width; }, 12);
+    y += 9;
+    rubricRows.forEach((row, index) => {
+      const fill = index % 2 ? [248, 248, 248] : [255, 255, 255];
+      drawPdfCell(doc, row[0], 12, y, 28, 11, { fill, bold: true, align: "center" });
+      drawPdfCell(doc, row[1], 40, y, 58, 11, { fill, bold: true });
+      drawPdfCell(doc, row[2], 98, y, 187, 11, { fill });
+      y += 11;
+    });
+    doc.setFillColor(219, 234, 254); doc.roundedRect(12, 137, 273, 16, 2, 2, "F");
+    doc.setTextColor(23, 37, 84); doc.setFont("helvetica", "bold"); doc.setFontSize(8);
+    doc.text(doc.splitTextToSize("Los puntos de juego, insignias, llaves, +1 de participación y Bono +1 para la prueba de unidad son incentivos. No modifican el resultado diagnóstico sobre 10.", 265), 16, 144);
+    addPdfFooter(doc, pageNumber);
+
+    doc.addPage("a4", "landscape"); pageNumber += 1;
+    addPdfHeader(doc, "RESULTADOS INDIVIDUALES", reportDate);
+    y = 36;
+    const widths = [56, 20, 25, 43, 34, 48, 47];
+    const headers = ["Estudiante", "Curso", "Resultado", "Nivel diagnóstico", "Puntos", "Incentivos", "Fecha"];
+    let x = 12;
+    headers.forEach((header, index) => { drawPdfCell(doc, header, x, y, widths[index], 10, { fill: [217, 217, 217], bold: true, align: "center" }); x += widths[index]; });
+    y += 10;
+    const rows = filteredResults.length ? filteredResults : [{ student: "Sin registros para los filtros seleccionados", grade: "-", parallel: "", correct: "-", performance: "-", points: 0 }];
+    rows.forEach((item, index) => {
+      if (y > 184) {
+        addPdfFooter(doc, pageNumber);
+        doc.addPage("a4", "landscape"); pageNumber += 1; addPdfHeader(doc, "RESULTADOS INDIVIDUALES · CONTINUACIÓN", reportDate); y = 36;
+        x = 12; headers.forEach((header, column) => { drawPdfCell(doc, header, x, y, widths[column], 10, { fill: [217, 217, 217], bold: true, align: "center" }); x += widths[column]; }); y += 10;
+      }
+      const incentives = [item.bonusUnlocked ? "+1 prueba de unidad" : "", item.sweetUnlocked ? "+1 participación" : ""].filter(Boolean).join(" · ") || "Pendiente";
+      const values = [item.student || "Sin identificación", `${item.grade}.º ${item.parallel || ""}`, `${item.correct ?? 0}/10`, item.performance || "Sin clasificar", Number(item.points || 0).toLocaleString("es-EC"), incentives, formatDate(item.createdAt)];
+      x = 12; values.forEach((value, column) => { drawPdfCell(doc, value, x, y, widths[column], 12, { fill: index % 2 ? [248, 248, 248] : [255, 255, 255], fontSize: 7 }); x += widths[column]; }); y += 12;
+    });
+    addPdfFooter(doc, pageNumber);
+    doc.save(`informe-diagnostico-emprendimiento-${new Date().toISOString().slice(0, 10)}.pdf`);
+  } catch (error) {
+    console.error("Error al generar PDF", error);
+    alert("No fue posible generar el informe PDF. Recarga la página e inténtalo nuevamente.");
+  } finally {
+    button.disabled = false;
+    button.textContent = "📄 Descargar informe PDF";
   }
 }
 
@@ -389,4 +515,4 @@ $("#logoutButton").addEventListener("click", () => signOut(auth));
 [$("#gradeFilter"), $("#parallelFilter"), $("#performanceFilter")].forEach(filter => filter.addEventListener("change", applyFilters));
 $("#clearFilters").addEventListener("click", () => { $("#gradeFilter").value = "all"; $("#parallelFilter").value = "all"; $("#performanceFilter").value = "all"; applyFilters(); });
 $("#excelButton").addEventListener("click", downloadExcelReport);
-$("#pdfButton").addEventListener("click", () => window.print());
+$("#pdfButton").addEventListener("click", downloadPdfReport);
