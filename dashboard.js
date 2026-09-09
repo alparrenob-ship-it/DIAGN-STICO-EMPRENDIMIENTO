@@ -94,13 +94,36 @@ function renderTable() {
   filteredResults.forEach(result => {
     const row = document.createElement("tr");
     const prizes = [result.bonusUnlocked ? "🎟️ +1 prueba de unidad" : "", result.sweetUnlocked ? "🙋 +1 participación" : ""].filter(Boolean).join(" · ") || "Pendiente";
-    row.innerHTML = `<td><strong></strong><small></small></td><td></td><td><strong>${Number(result.correct || 0)}/10</strong><small>${Number(result.keys || 0)}/5 retos</small></td><td><span class="performance-pill"></span></td><td>${Number(result.points || 0).toLocaleString("es-EC")}</td><td class="${result.bonusUnlocked || result.sweetUnlocked ? "bonus-yes" : ""}">${prizes}</td><td>${formatDate(result.createdAt)}</td>`;
+    row.innerHTML = `<td><strong></strong><small></small></td><td></td><td><strong>${Number(result.correct || 0)}/10</strong><small>${Number(result.keys || 0)}/5 retos</small></td><td><span class="performance-pill"></span></td><td>${Number(result.points || 0).toLocaleString("es-EC")}</td><td class="${result.bonusUnlocked || result.sweetUnlocked ? "bonus-yes" : ""}">${prizes}</td><td>${formatDate(result.createdAt)}</td><td><button class="row-delete-button" type="button">Eliminar</button></td>`;
     row.children[0].querySelector("strong").textContent = result.student || "Sin identificación";
     row.children[0].querySelector("small").textContent = (result.badges || []).join(" · ") || "Sin insignias";
     row.children[1].textContent = `${result.grade}.º ${result.parallel} · ${result.levelCode}`;
     row.querySelector(".performance-pill").textContent = result.performance || "Sin clasificar";
+    const deleteButton = row.querySelector(".row-delete-button");
+    deleteButton.setAttribute("aria-label", `Eliminar resultado de ${result.student || "estudiante sin identificación"}`);
+    deleteButton.addEventListener("click", () => deleteSingleResult(result, deleteButton));
     body.appendChild(row);
   });
+}
+
+async function deleteSingleResult(result, button) {
+  const student = result.student || "Estudiante sin identificación";
+  const course = `${result.grade}.º ${result.parallel || ""}`.trim();
+  const date = formatDate(result.createdAt);
+  const confirmed = window.confirm(`Se eliminará definitivamente este resultado:\n\n${student}\n${course}\n${date}\n\nEsta acción no se puede deshacer. ¿Deseas continuar?`);
+  if (!confirmed) return;
+  const originalText = button.textContent;
+  button.disabled = true;
+  button.textContent = "Eliminando…";
+  try {
+    await deleteDoc(doc(db, "diagnosticResults", result.id));
+    await loadResults();
+  } catch (error) {
+    console.error("Error al eliminar el resultado", error);
+    alert("No fue posible eliminar este resultado. Verifica que estés usando la cuenta docente autorizada.");
+    button.disabled = false;
+    button.textContent = originalText;
+  }
 }
 
 function renderDashboard() { renderMetrics(); renderGradeChart(); renderSkillChart(); renderTable(); }
