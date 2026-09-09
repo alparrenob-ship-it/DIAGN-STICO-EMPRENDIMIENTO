@@ -212,8 +212,8 @@ input[type="text"]:focus, select:focus { border-color: var(--primary); box-shado
 .result-actions { display: flex; gap: 9px; }
 .result-actions button { flex: 1; }
 .secondary-button { color: white; background: transparent; border: 1px solid rgba(255,255,255,.28); }
-.sweet-result { display: flex; align-items: center; gap: 10px; margin-top: 13px; padding: 12px; color: #493000; background: linear-gradient(135deg, #ffe997, #ffc66f); border-radius: 13px; }
-.sweet-result > span { font-size: 1.6rem; }.sweet-result strong, .sweet-result small { display: block; }.sweet-result small { margin-top: 2px; color: #705016; }
+.participation-result { display: flex; align-items: center; gap: 10px; margin-top: 13px; padding: 12px; color: #172554; background: linear-gradient(135deg, #dbeafe, #c4b5fd); border-radius: 13px; }
+.participation-result > span { font-size: 1.6rem; }.participation-result strong, .participation-result small { display: block; }.participation-result small { margin-top: 2px; color: #3730a3; }
 .sync-status { min-height: 20px !important; margin: 12px 0 0 !important; color: #cbd3eb !important; font-size: .74rem; line-height: 1.4 !important; }
 .sync-status.is-success { color: #9df0cc !important; }
 .sync-status.is-warning { color: #ffd58f !important; }
