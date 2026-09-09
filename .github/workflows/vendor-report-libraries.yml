@@ -1,0 +1,36 @@
+name: Incorporar generadores de reportes
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/vendor-report-libraries.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  vendor-report-libraries:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Copiar bibliotecas de reportes al sitio
+        run: |
+          npm pack exceljs@4.4.0
+          npm pack jspdf@2.5.2
+          mkdir -p vendor
+          tar -xOf exceljs-4.4.0.tgz package/dist/exceljs.min.js > vendor/exceljs.min.js
+          tar -xOf jspdf-2.5.2.tgz package/dist/jspdf.umd.min.js > vendor/jspdf.umd.min.js
+          test -s vendor/exceljs.min.js
+          test -s vendor/jspdf.umd.min.js
+      - name: Publicar bibliotecas locales
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add vendor/exceljs.min.js vendor/jspdf.umd.min.js
+          git diff --cached --quiet || git commit -m "Añadir generadores locales de Excel y PDF"
+          git push
