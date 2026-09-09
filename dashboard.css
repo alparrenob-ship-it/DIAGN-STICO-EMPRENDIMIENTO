@@ -19,6 +19,9 @@ h1,h2 { margin:0; font-family:"Fredoka",system-ui,sans-serif; line-height:1.08; 
 .danger-button { min-height:44px; padding:0 17px; color:#991b1b; border:1px solid #fecaca; border-radius:12px; background:#fff7f7; font-weight:900; }
 .danger-button:hover { color:white; background:#b91c1c; border-color:#b91c1c; }
 .danger-button:disabled { opacity:.6; cursor:wait; }
+.row-delete-button { min-height:34px; padding:0 12px; color:#991b1b; border:1px solid #fecaca; border-radius:9px; background:#fff7f7; font-weight:800; white-space:nowrap; }
+.row-delete-button:hover { color:white; background:#b91c1c; border-color:#b91c1c; }
+.row-delete-button:disabled { opacity:.6; cursor:wait; }
 .login-view { min-height:calc(100vh - 185px); display:grid; place-items:center; }
 .login-card { width:min(480px,100%); padding:42px; text-align:center; background:rgba(255,255,255,.94); border:1px solid white; border-radius:28px; box-shadow:0 22px 60px rgba(27,39,94,.13); }
 .login-icon { width:68px; height:68px; display:grid; place-items:center; margin:0 auto 20px; background:#eeebff; border-radius:22px; font-size:2rem; }
