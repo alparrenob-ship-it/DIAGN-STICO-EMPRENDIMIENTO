@@ -16,6 +16,9 @@ h1,h2 { margin:0; font-family:"Fredoka",system-ui,sans-serif; line-height:1.08; 
 .primary-button,.ghost-button { min-height:44px; padding:0 17px; border-radius:12px; font-weight:900; }
 .primary-button { color:white; border:0; background:linear-gradient(135deg,var(--primary),var(--primary-dark)); box-shadow:0 9px 20px rgba(73,57,201,.2); }
 .ghost-button { color:var(--ink); border:1px solid var(--border); background:white; }
+.danger-button { min-height:44px; padding:0 17px; color:#991b1b; border:1px solid #fecaca; border-radius:12px; background:#fff7f7; font-weight:900; }
+.danger-button:hover { color:white; background:#b91c1c; border-color:#b91c1c; }
+.danger-button:disabled { opacity:.6; cursor:wait; }
 .login-view { min-height:calc(100vh - 185px); display:grid; place-items:center; }
 .login-card { width:min(480px,100%); padding:42px; text-align:center; background:rgba(255,255,255,.94); border:1px solid white; border-radius:28px; box-shadow:0 22px 60px rgba(27,39,94,.13); }
 .login-icon { width:68px; height:68px; display:grid; place-items:center; margin:0 auto 20px; background:#eeebff; border-radius:22px; font-size:2rem; }
