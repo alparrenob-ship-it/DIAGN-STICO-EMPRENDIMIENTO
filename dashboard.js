@@ -1,6 +1,6 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
 import { getAuth, GoogleAuthProvider, onAuthStateChanged, signInWithPopup, signOut } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js";
-import { collection, getDocs, getFirestore, orderBy, query } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
+import { collection, deleteDoc, doc, getDocs, getFirestore, orderBy, query } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
 import { firebaseConfig, isFirebaseConfigured, TEACHER_EMAIL } from "./firebase-config.js";
 import { EIGHT_ACADEMY_LOGO_DATA_URL, EIGHT_ACADEMY_TAGLINE_DATA_URL } from "./eight-logo-data.js?v=20260909-1";
 import { INSTITUTIONAL_TEMPLATE_BASE64 } from "./institutional-template-data.js?v=20260909-1";
@@ -147,6 +147,7 @@ function styleTitle(sheet, title, subtitle, endColumn) {
   sheet.getCell("A2").alignment = { vertical: "middle", horizontal: "center", wrapText: true };
   sheet.getCell("A2").border = { top: { style: "thin", color: { argb: excelColors.line } }, bottom: { style: "thin", color: { argb: excelColors.line } } };
   sheet.getRow(2).height = 25;
+  sheet.headerFooter = sheet.headerFooter || {};
   sheet.headerFooter.oddHeader = `&C${subtitle}`;
 }
 
@@ -346,6 +347,7 @@ async function downloadExcelReport() {
 
     [summary, results, rubric].forEach(sheet => {
       sheet.pageSetup = { orientation: "landscape", fitToPage: true, fitToWidth: 1, fitToHeight: 0, margins: { left: 0.25, right: 0.25, top: 0.5, bottom: 0.5, header: 0.2, footer: 0.2 } };
+      sheet.headerFooter = sheet.headerFooter || {};
       sheet.headerFooter.oddFooter = "&LProfe Anita · Misión Emprende&C&P de &N&RReporte confidencial";
     });
 
@@ -363,6 +365,36 @@ async function downloadExcelReport() {
   } finally {
     button.disabled = false;
     button.textContent = "📊 Descargar reporte Excel";
+  }
+}
+
+function getTestResults() {
+  const testNames = new Set(["ana bastidas", "prueba docente"]);
+  return allResults.filter(item => testNames.has(String(item.student || "").trim().toLowerCase()));
+}
+
+async function deleteTestResults() {
+  const testResults = getTestResults();
+  if (!testResults.length) {
+    alert("No quedan registros de prueba para eliminar.");
+    return;
+  }
+  const names = [...new Set(testResults.map(item => item.student))].join(" y ");
+  const confirmed = window.confirm(`Se eliminarán definitivamente ${testResults.length} registros de prueba (${names}). Esta acción no se puede deshacer. ¿Deseas continuar?`);
+  if (!confirmed) return;
+  const button = $("#deleteTestsButton");
+  button.disabled = true;
+  button.textContent = "Eliminando pruebas…";
+  try {
+    await Promise.all(testResults.map(item => deleteDoc(doc(db, "diagnosticResults", item.id))));
+    await loadResults();
+    alert("Los registros de prueba fueron eliminados correctamente.");
+  } catch (error) {
+    console.error("Error al eliminar registros de prueba", error);
+    alert("No fue posible eliminar los registros. Verifica que estés usando la cuenta docente autorizada.");
+  } finally {
+    button.disabled = false;
+    button.textContent = "🗑 Eliminar registros de prueba";
   }
 }
 
@@ -516,3 +548,4 @@ $("#logoutButton").addEventListener("click", () => signOut(auth));
 $("#clearFilters").addEventListener("click", () => { $("#gradeFilter").value = "all"; $("#parallelFilter").value = "all"; $("#performanceFilter").value = "all"; applyFilters(); });
 $("#excelButton").addEventListener("click", downloadExcelReport);
 $("#pdfButton").addEventListener("click", downloadPdfReport);
+$("#deleteTestsButton").addEventListener("click", deleteTestResults);
