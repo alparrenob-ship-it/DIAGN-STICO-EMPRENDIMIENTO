@@ -8,7 +8,7 @@ const LEVELS = {
   7: { code: "SCALE", label: "Escalar", avatar: "🚀", difficulty: "Startup Mindset", color: "#ff6689", reward: "Golden Ticket Series A +1", badge: ["🚀", "Fundador de startup", "Valida, escala y usa tecnología con propósito"] }
 };
 
-const SWEET_MISSIONS = { 4: 6, 5: 8, 6: 8, 7: 8 };
+const PARTICIPATION_MISSIONS = { 4: 6, 5: 8, 6: 8, 7: 8 };
 const BOSS_AVATARS = { 4: "👾", 5: "🤖", 6: "🐉", 7: "🦠" };
 
 const q = (category, title, options, correct, feedback) => ({ type: "question", category, title, options, correct, feedback });
@@ -26,7 +26,7 @@ const MISSION_BANK = {
     q("Cliente y valor", "Si diseñas loncheras para estudiantes, ¿quiénes serían tus posibles clientes?", ["Quienes necesitan o comprarían las loncheras", "Solo quienes fabrican lápices", "Únicamente los profesores", "Nadie, porque no hay que preguntar"], 0, "El cliente es la persona que necesita, elige o compra un producto o servicio."),
     collect("Cliente y valor", "Reto: encuentra al cliente", "Una botella pequeña y resistente fue creada para llevar agua durante la jornada escolar. Selecciona a sus clientes más probables.", ["Estudiantes", "Familias que preparan la mochila", "Una fábrica de muebles", "Personas que nunca usan botellas", "Docentes que llevan agua al aula"], [0, 1, 4], "El cliente correcto comparte la necesidad que nuestro producto busca resolver."),
     q("Dinero y ahorro", "Una pulsera cuesta $2 en materiales y se vende en $3. ¿Cuánto queda como ganancia simple?", ["$1", "$2", "$3", "$5"], 0, "La ganancia simple se obtiene al restar el costo al precio de venta: $3 − $2 = $1."),
-    sort("Dinero y ahorro", "Reto: protege tus monedas", "Decide si cada acción representa ahorro o gasto.", ["Ahorro", "Gasto"], [{ text: "Guardar $2 para comprar materiales", group: 0 }, { text: "Comprar un dulce", group: 1 }, { text: "Separar monedas para una meta", group: 0 }, { text: "Pagar por una cartulina", group: 1 }], "Ahorrar es reservar dinero para una meta; gastar es usarlo para adquirir algo."),
+    sort("Dinero y ahorro", "Reto: protege tus monedas", "Decide si cada acción representa ahorro o gasto.", ["Ahorro", "Gasto"], [{ text: "Guardar $2 para comprar materiales", group: 0 }, { text: "Comprar un juguete", group: 1 }, { text: "Separar monedas para una meta", group: 0 }, { text: "Pagar por una cartulina", group: 1 }], "Ahorrar es reservar dinero para una meta; gastar es usarlo para adquirir algo."),
     q("Creatividad y equipo", "Tu primera idea no funciona. ¿Qué haría una persona emprendedora?", ["La mejora y vuelve a probar", "Se rinde de inmediato", "Culpa a los demás", "Oculta el problema"], 0, "Las personas emprendedoras aprenden, mejoran sus ideas y perseveran."),
     scenario("Reto integrador", "Jefe de nivel: prepara el Idea Day", "Toma tres decisiones para presentar una idea útil en la mini feria.", [
       { prompt: "Primero debes elegir una oportunidad.", options: ["Muchos niños pierden sus lápices", "Copiar un producto sin preguntar", "Vender cualquier cosa"], correct: 0 },
@@ -116,7 +116,7 @@ Object.entries(MISSION_BANK).forEach(([grade, missions]) => {
   });
 });
 
-const state = { student: "", grade: 4, parallel: "", index: 0, points: 0, keys: 0, streak: 0, maxStreak: 0, correct: 0, mistakes: 0, answers: [], sound: true, locked: false, challenge: null, bonusUnlocked: false, sweetUnlocked: false, resultId: null };
+const state = { student: "", grade: 4, parallel: "", index: 0, points: 0, keys: 0, streak: 0, maxStreak: 0, correct: 0, mistakes: 0, answers: [], sound: true, locked: false, challenge: null, bonusUnlocked: false, participationUnlocked: false, resultId: null };
 const $ = selector => document.querySelector(selector);
 const screens = { start: $("#startScreen"), game: $("#gameScreen"), result: $("#resultScreen") };
 $("#evaluationHeaderImage").src = EVALUATION_HEADER_DATA_URL;
@@ -163,7 +163,7 @@ function beginGame(event) {
   const data = new FormData(event.currentTarget);
   const firstName = data.get("studentFirstName").trim().replace(/\s+/g, " ");
   const lastName = data.get("studentLastName").trim().replace(/\s+/g, " ");
-  Object.assign(state, { student: `${firstName} ${lastName}`, grade: Number(data.get("grade")), parallel: data.get("parallel"), index: 0, points: 0, keys: 0, streak: 0, maxStreak: 0, correct: 0, mistakes: 0, answers: [], locked: false, challenge: null, bonusUnlocked: false, sweetUnlocked: false, resultId: null });
+  Object.assign(state, { student: `${firstName} ${lastName}`, grade: Number(data.get("grade")), parallel: data.get("parallel"), index: 0, points: 0, keys: 0, streak: 0, maxStreak: 0, correct: 0, mistakes: 0, answers: [], locked: false, challenge: null, bonusUnlocked: false, participationUnlocked: false, resultId: null });
   const level = LEVELS[state.grade];
   $("#hudAvatar").textContent = level.avatar;
   $("#hudName").textContent = state.student;
@@ -197,8 +197,8 @@ function renderMission() {
   $("#progressBar").style.width = `${progress}%`;
   $(".progress-track").setAttribute("aria-valuenow", String(progress));
   $("#categoryBadge").textContent = mission.type === "question" ? mission.category : `♦ RETO · ${mission.category}`;
-  const isPrizeMission = mission.type === "question" && state.index === SWEET_MISSIONS[state.grade];
-  $("#difficultyBadge").textContent = isPrizeMission ? "🍬 Pregunta Premio" : level.difficulty;
+  const isPrizeMission = mission.type === "question" && state.index === PARTICIPATION_MISSIONS[state.grade];
+  $("#difficultyBadge").textContent = isPrizeMission ? "🙋 Reto de participación +1" : level.difficulty;
   $("#prizeBanner").classList.toggle("is-hidden", !isPrizeMission);
   $("#questionText").textContent = mission.title;
   $("#questionHint").textContent = mission.type === "question" ? "Elige la opción que consideres correcta." : mission.instruction;
@@ -377,15 +377,15 @@ function completeMission(isCorrect) {
     state.streak += 1; state.maxStreak = Math.max(state.maxStreak, state.streak); state.correct += 1;
     state.points += (mission.type === "question" ? 100 : 160) + Math.min((state.streak - 1) * 20, 60);
   } else { state.streak = 0; state.mistakes += 1; }
-  const isPrizeMission = mission.type === "question" && state.index === SWEET_MISSIONS[state.grade];
-  if (isPrizeMission && isCorrect) state.sweetUnlocked = true;
+  const isPrizeMission = mission.type === "question" && state.index === PARTICIPATION_MISSIONS[state.grade];
+  if (isPrizeMission && isCorrect) state.participationUnlocked = true;
   if (mission.type !== "question") state.keys += 1;
   state.answers.push({ category: mission.category, correct: isCorrect, type: mission.type });
   updateHud();
   const feedback = $("#feedbackBox"); feedback.classList.remove("is-hidden"); feedback.classList.toggle("is-error", !isCorrect);
   $("#feedbackIcon").textContent = isCorrect ? "✓" : "!";
-  $("#feedbackTitle").textContent = isPrizeMission && isCorrect ? "🍬 ¡Cupón de dulce desbloqueado!" : isPrizeMission ? "El dulce se escapó, pero ganaste una pista" : isCorrect ? (mission.type === "question" ? "¡Decisión acertada!" : "¡Reto conquistado!") : "Buen intento: descubriste una pista";
-  $("#feedbackText").textContent = isPrizeMission && isCorrect ? `${mission.feedback} Presenta tu cupón final a Profe Anita.` : mission.feedback;
+  $("#feedbackTitle").textContent = isPrizeMission && isCorrect ? "🙋 ¡Punto de participación desbloqueado!" : isPrizeMission ? "Sigue participando: ganaste una pista" : isCorrect ? (mission.type === "question" ? "¡Decisión acertada!" : "¡Reto conquistado!") : "Buen intento: descubriste una pista";
+  $("#feedbackText").textContent = isPrizeMission && isCorrect ? `${mission.feedback} Tu +1 de participación quedó registrado para validación docente.` : mission.feedback;
   const next = $("#nextButton"); next.classList.remove("is-hidden");
   next.firstChild.textContent = state.index === 9 ? "Ver mi diagnóstico " : "Siguiente misión ";
   playTone(isCorrect ? "correct" : "incorrect"); next.focus();
@@ -415,7 +415,7 @@ function getBadges(includeBonus = false) {
   if (state.mistakes > 0) badges.push({ icon: "🔥", name: "Mente resiliente", text: "Continuó aprendiendo después de equivocarse" });
   if (state.maxStreak >= 3) badges.push({ icon: "⚡", name: "Racha maestra", text: `Alcanzó ${state.maxStreak} aciertos consecutivos` });
   if (state.correct >= 9) badges.push({ icon: "🏆", name: "Dominio emprendedor", text: "Demostró dominio destacado" });
-  if (state.sweetUnlocked) badges.push({ icon: "🍬", name: "Pregunta Premio", text: "Cupón de dulce pendiente de validación docente" });
+  if (state.participationUnlocked) badges.push({ icon: "🙋", name: "Participación destacada", text: "+1 punto de participación pendiente de validación docente" });
   if (includeBonus) badges.push({ icon: "🎟️", name: "Bono desbloqueado", text: level.reward });
   return badges;
 }
@@ -439,7 +439,7 @@ function renderResults() {
   $("#scoreRing").style.background = `conic-gradient(${level.color} ${state.correct * 10}%, #dfe5f4 0)`;
   $("#resultLevel").textContent = overall.label; $("#recommendationText").textContent = overall.message;
   $("#resultName").textContent = state.student; $("#resultCourse").textContent = `${state.grade}.º ${state.parallel}`; $("#finalPoints").textContent = state.points.toLocaleString("es-EC");
-  $("#sweetReward").classList.toggle("is-hidden", !state.sweetUnlocked);
+  $("#participationReward").classList.toggle("is-hidden", !state.participationUnlocked);
   $("#bonusName").textContent = level.reward; $("#reflectionInput").value = "";
   $("#bonusCard").classList.add("is-locked"); $("#bonusCard").classList.remove("is-unlocked"); $("#bonusIcon").textContent = "🔒";
   $("#bonusDescription").textContent = "Completa tu reflexión para desbloquear un punto adicional en la primera prueba de unidad.";
@@ -474,7 +474,8 @@ async function persistResult(grouped) {
       keys: state.keys,
       maxStreak: state.maxStreak,
       performance: getOverallLevel(state.correct).label,
-      sweetUnlocked: state.sweetUnlocked,
+      // Se conserva este nombre de campo para mantener compatibilidad con las reglas de Firestore ya publicadas.
+      sweetUnlocked: state.participationUnlocked,
       skills,
       badges: getBadges().map(badge => badge.name)
     });
