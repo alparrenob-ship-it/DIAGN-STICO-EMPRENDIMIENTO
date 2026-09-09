@@ -46,6 +46,6 @@ Sube los dos archivos modificados a la rama `main`. GitHub Pages se actualizará
 
 El panel permite descargar por separado los resultados y la rúbrica diagnóstica en CSV; el informe PDF reúne indicadores, rúbrica y evidencias individuales.
 
-El dashboard también registra la **Pregunta Premio** y muestra qué estudiantes obtuvieron el cupón de dulce para validación docente.
+El dashboard también registra el **Reto de participación +1** y muestra qué estudiantes obtuvieron el punto adicional de participación para validación docente. Este incentivo no modifica el resultado diagnóstico sobre 10.
 
 La página docente quedará disponible en `https://alparrenob-ship-it.github.io/DIAGN-STICO-EMPRENDIMIENTO/docente.html`.
